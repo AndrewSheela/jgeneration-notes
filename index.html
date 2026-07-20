@@ -39,7 +39,7 @@
 </head>
 <body class="min-h-screen">
 
-    <!-- Global header handles the title/navigation dynamically -->
+    <!-- Global header container -->
     <div id="globalHeader"></div>
 
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -123,30 +123,33 @@
     <div id="footer"></div>
 
     <script>
-        var ACTIVE_NAV = "notes"; 
+        // Anti-duplication execution lock
+        if (typeof window.appInitialized === "undefined") {
+            window.appInitialized = true;
 
-        // Safely fetch header without duplication loops
-        fetch("/header.html")
-          .then(res => res.text())
-          .then(data => {
-            document.getElementById("globalHeader").innerHTML = data;
-            var map = {
-              'home': '.btn-home', 'notes': '.btn-notes', 'videos': '.btn-videos',
-              'bible': '.btn-bible', 'courses': '.btn-courses', 'ppt': '.btn-ppt', 'about': '.btn-about'
-            };
-            var el = document.querySelector(map[ACTIVE_NAV]);
-            if (el) el.classList.add('active');
-            
-            // Avoid appending script dynamically if it causes double initialization loops
-            if (!document.querySelector('script[src^="/js/global-search.js"]')) {
-                var script = document.createElement("script");
-                script.src = "/js/global-search.js?v=" + Date.now();
-                document.body.appendChild(script);
-            }
-          })
-          .catch(err => console.error("Header load failed:", err));
+            var ACTIVE_NAV = "notes"; 
 
-        fetch("/footer.html").then(res => res.text()).then(data => document.getElementById("footer").innerHTML = data);
+            fetch("/header.html")
+              .then(res => res.text())
+              .then(data => {
+                document.getElementById("globalHeader").innerHTML = data;
+                var map = {
+                  'home': '.btn-home', 'notes': '.btn-notes', 'videos': '.btn-videos',
+                  'bible': '.btn-bible', 'courses': '.btn-courses', 'ppt': '.btn-ppt', 'about': '.btn-about'
+                };
+                var el = document.querySelector(map[ACTIVE_NAV]);
+                if (el) el.classList.add('active');
+                
+                if (!document.querySelector('script[src^="/js/global-search.js"]')) {
+                    var script = document.createElement("script");
+                    script.src = "/js/global-search.js?v=" + Date.now();
+                    document.body.appendChild(script);
+                }
+              })
+              .catch(err => console.error("Header load failed:", err));
+
+            fetch("/footer.html").then(res => res.text()).then(data => document.getElementById("footer").innerHTML = data);
+        }
 
         const songData = [
             { name: "Andha-Sooriyan", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/keyboard-notes/tamil-songs/ravi-bharath/Andha-Sooriyan.html" },
@@ -193,7 +196,7 @@
             { name: "Unnathathin Aaviyai Unthan", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Unnathathin-Aaviyai-Unthan.html" },
             { name: "Yaar Pirikka Mudiyum En", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yaar-Pirikka-Mudiyum-En.html" },
             { name: "Yaar Vaendum Naatha", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yaar-Vaendum-Naatha.html" },
-            { name: "Yesu Nam Pinigalai", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Nam-Pinigalai.html" },
+            { name: "Yesu Nam Pinigalai", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu Nam-Pinigalai.html" },
             { name: "Yesu Nammodu Indru", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Nammodu-Indru.html" },
             { name: "Yesu Pothumae Enakku", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Pothumae-Enakku.html" },
             { name: "Halleluiah Elshadai", artist: "Paul Thangiah", album: "Paraloga Devanae", lang: "Tamil", url: "/keyboard-notes/tamil-songs/paul-thangiah/Halleluia-Elshadai.html" },
@@ -408,6 +411,8 @@
 
         function renderSongs() {
             const listBody = document.getElementById('songs-list-body');
+            if (!listBody) return; // Guard clause against missing viewports
+            
             const searchVal = document.getElementById('songSearch').value.toLowerCase();
             const emptyState = document.getElementById('empty-state');
             const tableContainer = listBody.closest('.bg-white');
