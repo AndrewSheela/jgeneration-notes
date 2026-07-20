@@ -439,7 +439,23 @@
     <script>
     fetch("/header.html")
         .then(res => res.text())
-        .then(data => document.getElementById("global-header").innerHTML = data);
+        .then(data => {
+            const container = document.getElementById("global-header");
+            container.innerHTML = data;
+
+            // Scripts inserted via innerHTML do NOT execute automatically.
+            // Manually re-create each <script> tag so header.html's search
+            // logic (handleHeaderSearch, etc.) actually runs.
+            container.querySelectorAll("script").forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+            });
+        });
 </script>
 </body>
 </html>
