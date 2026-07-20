@@ -444,13 +444,15 @@
             }
         }
 
-        // Final cleanly targeted init block
+    // Final cleanly targeted init block
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const searchQuery = urlParams.get('search');
             if (searchQuery) {
                 const searchInput = document.getElementById('songSearch');
-                if (searchInput) searchInput.value = decodeURIComponent(searchQuery);
+                if (searchInput) {
+                    searchInput.value = decodeURIComponent(searchQuery);
+                }
             }
             renderSongs();
         });
