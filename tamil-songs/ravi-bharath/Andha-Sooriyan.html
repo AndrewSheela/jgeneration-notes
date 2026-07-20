@@ -227,7 +227,7 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
-  <div id="globalHeader"></div>
+ 
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -305,12 +305,6 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 <br></br>  
 <div class="video-card"><div class="video-container"><iframe src="https://www.youtube.com/embed/h" title="Yega Sinthaye Yega Snegame Keyboard Notes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div>
 
-<div id="footer"></div>
-
-<script>
-fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("globalHeader").innerHTML = data; }); 
-fetch("/footer.html").then(res => res.text()).then(data => { document.getElementById("footer").innerHTML = data; });
-</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
