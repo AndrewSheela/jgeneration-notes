@@ -1,24 +1,24 @@
-<nav class="bg-indigo-950 text-white shadow-md border-b border-indigo-900/50 sticky top-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between py-3 sm:h-16 gap-3 sm:gap-4">
+<nav class="bg-indigo-950 text-white shadow-lg border-b border-indigo-900/50 sticky top-0 z-50 py-2">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center justify-between py-2 md:h-20 gap-4 md:gap-6">
             
             <!-- Logo & Navigation Links -->
-            <div class="flex items-center justify-between w-full sm:w-auto gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="font-extrabold text-lg tracking-tight text-amber-300">JGeneration</span>
-                    <span class="text-xs font-semibold bg-white/10 px-2 py-0.5 rounded text-slate-300">Notes</span>
+            <div class="flex flex-col sm:flex-row items-center justify-between w-full md:w-auto gap-4 sm:gap-8">
+                <div class="flex items-center gap-3">
+                    <span class="font-black text-2xl tracking-tight text-amber-300">JGeneration</span>
+                    <span class="text-sm font-bold bg-white/10 px-3 py-1 rounded-md text-slate-200">Notes</span>
                 </div>
-                <div class="flex items-center space-x-1 sm:space-x-2">
-                    <a href="/" class="px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Home</a>
-                    <a href="/piano-player.html" class="px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Player</a>
-                    <a href="/about-us.html" class="px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-white/10 text-slate-200 hover:text-white transition-all">About</a>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="/" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Home</a>
+                    <a href="/piano-player.html" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Player</a>
+                    <a href="/about-us.html" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">About</a>
                 </div>
             </div>
             
-            <!-- Modern UI Global Search Bar -->
-            <div class="relative w-full sm:w-72 group">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400 group-focus-within:text-amber-300 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Modern UI Global Search Bar (Increased Height & Width) -->
+            <div class="relative w-full md:w-96 group">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-amber-300 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </span>
@@ -27,7 +27,7 @@
                     id="globalHeaderSearch" 
                     placeholder="Search all songs, artists..." 
                     onkeydown="handleHeaderSearch(event)"
-                    class="w-full pl-9 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:bg-white focus:text-slate-900 focus:placeholder-slate-500 focus:ring-2 focus:ring-amber-300 transition-all shadow-inner"
+                    class="w-full pl-11 pr-5 py-3 bg-white/10 border border-white/20 rounded-xl text-base text-white placeholder-slate-400 focus:outline-none focus:bg-white focus:text-slate-900 focus:placeholder-slate-500 focus:ring-2 focus:ring-amber-300 transition-all shadow-inner"
                 >
             </div>
 
@@ -41,7 +41,6 @@
         if (event.key === 'Enter') {
             const query = encodeURIComponent(event.target.value.trim());
             
-            // If we are already on the index page, just sync up the local search directly
             const localSearch = document.getElementById('songSearch');
             if (localSearch) {
                 localSearch.value = event.target.value;
@@ -49,21 +48,10 @@
                     renderSongs();
                 }
             } else {
-                // If we are on a song page, redirect to home page with the search variable attached
                 window.location.href = '/?search=' + query;
             }
         }
     }
-
-    // Auto-fill the header search bar if a query is already active in the address bar
-    window.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const activeQuery = params.get('search');
-        if (activeQuery) {
-            const headerInput = document.getElementById('globalHeaderSearch');
-            if (headerInput) headerInput.value = decodeURIComponent(activeQuery);
-        }
-    });
 </script>
 <script>
     fetch("/header.html")
