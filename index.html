@@ -37,8 +37,6 @@
 </head>
 <body class="min-h-screen">
 
-    <div id="globalHeader"></div>
-
     <!-- Unique, non-standard layout container to stay hidden from global search conflicts -->
     <main class="local-notes-wrapper max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div class="glass sticky top-6 z-20 p-5 rounded-2xl shadow-xl mb-8">
@@ -120,23 +118,6 @@
     <script>
         if (typeof window.notesAppInitialized === "undefined") {
             window.notesAppInitialized = true;
-            var ACTIVE_NAV = "notes"; 
-
-            fetch("/header.html")
-              .then(res => res.text())
-              .then(data => {
-                document.getElementById("globalHeader").innerHTML = data;
-                var map = {'home': '.btn-home', 'notes': '.btn-notes', 'videos': '.btn-videos', 'bible': '.btn-bible', 'courses': '.btn-courses', 'ppt': '.btn-ppt', 'about': '.btn-about'};
-                var el = document.querySelector(map[ACTIVE_NAV]);
-                if (el) el.classList.add('active');
-                
-                if (!document.querySelector('script[src^="/js/global-search.js"]')) {
-                    var script = document.createElement("script");
-                    script.src = "/js/global-search.js?v=" + Date.now();
-                    document.body.appendChild(script);
-                }
-              })
-              .catch(err => console.error("Header failed:", err));
 
             fetch("/footer.html").then(res => res.text()).then(data => document.getElementById("footer").innerHTML = data);
         }
