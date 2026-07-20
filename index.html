@@ -23,12 +23,10 @@
         .song-row:hover {
             background-color: #f1f5f9;
         }
-
         .filter-btn {
             color: #0f172a; 
             background-color: transparent;
         }
-        
         .filter-btn.active {
             background-color: #2563eb !important;
             color: white !important;
@@ -36,12 +34,26 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
     </style>
+    <script>
+        // ANTI-DUPLICATION RADAR: Intercepts and destroys external layout injections instantly
+        const observer = new MutationObserver((mutations) => {
+            let searchPanels = document.querySelectorAll('main.max-w-5xl');
+            if (searchPanels.length > 1) {
+                // Keep the very first original one, discard subsequent injected lookalikes
+                for (let i = 1; i < searchPanels.length; i++) {
+                    searchPanels[i].remove();
+                }
+            }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+    </script>
 </head>
 <body class="min-h-screen">
 
-    <!-- Global header target element -->
+    <!-- Global header container -->
     <div id="globalHeader"></div>
 
+    <!-- The core single structure -->
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div class="glass sticky top-6 z-20 p-5 rounded-2xl shadow-xl mb-8">
             <div class="flex flex-col gap-4">
@@ -110,44 +122,36 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            
             <div class="px-6 py-3 bg-slate-50 border-b border-slate-100">
                 <input type="text" id="modalSearchInput" placeholder="Filter list..." onkeyup="filterModalItems()" class="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900">
             </div>
-
-            <div id="modalContent" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50">
-            </div>
+            <div id="modalContent" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50"></div>
         </div>
     </div>
 
     <div id="footer"></div>
 
     <script>
-        // Use a strict variable flag to stop concurrent dynamic calls 
         if (typeof window.notesAppInitialized === "undefined") {
             window.notesAppInitialized = true;
-
             var ACTIVE_NAV = "notes"; 
 
             fetch("/header.html")
               .then(res => res.text())
               .then(data => {
                 document.getElementById("globalHeader").innerHTML = data;
-                var map = {
-                  'home': '.btn-home', 'notes': '.btn-notes', 'videos': '.btn-videos',
-                  'bible': '.btn-bible', 'courses': '.btn-courses', 'ppt': '.btn-ppt', 'about': '.btn-about'
-                };
+                var map = {'home': '.btn-home', 'notes': '.btn-notes', 'videos': '.btn-videos', 'bible': '.btn-bible', 'courses': '.btn-courses', 'ppt': '.btn-ppt', 'about': '.btn-about'};
                 var el = document.querySelector(map[ACTIVE_NAV]);
                 if (el) el.classList.add('active');
                 
-                // Only embed cross-origin search files if not already populated
+                // If it's a subdomain, make sure the global search doesn't step on our local DOM
                 if (!document.querySelector('script[src^="/js/global-search.js"]')) {
                     var script = document.createElement("script");
                     script.src = "/js/global-search.js?v=" + Date.now();
                     document.body.appendChild(script);
                 }
               })
-              .catch(err => console.error("Header load failed:", err));
+              .catch(err => console.error("Header failed:", err));
 
             fetch("/footer.html").then(res => res.text()).then(data => document.getElementById("footer").innerHTML = data);
         }
@@ -259,7 +263,6 @@
         let currentPage = 1;
         const songsPerPage = 100;
         let lastSearchVal = "";
-        
         let currentModalMode = ''; 
         let currentModalData = {}; 
 
@@ -289,7 +292,6 @@
             const modal = document.getElementById('browseModal');
             const title = document.getElementById('modalTitle');
             const searchInput = document.getElementById('modalSearchInput');
-            
             searchInput.value = '';
             
             currentModalData = {};
@@ -299,9 +301,7 @@
             });
 
             title.innerText = mode === 'album' ? 'Browse by Album' : 'Browse by Artist';
-            
             filterModalItems();
-
             modal.classList.remove('hidden');
             setTimeout(() => modal.firstElementChild.classList.remove('scale-95'), 10);
             setTimeout(() => searchInput.focus(), 100);
@@ -310,7 +310,6 @@
         function filterModalItems() {
             const query = document.getElementById('modalSearchInput').value.toLowerCase();
             const content = document.getElementById('modalContent');
-            
             const sortedKeys = Object.keys(currentModalData).sort();
             const filteredKeys = sortedKeys.filter(key => key.toLowerCase().includes(query));
 
@@ -363,30 +362,19 @@
             if (!paginationContainer) return;
 
             if (totalPages <= 1) {
-                paginationContainer.innerHTML = `
-                    <div class="text-xs font-semibold text-slate-500">Showing all ${totalCount} songs</div>
-                `;
+                paginationContainer.innerHTML = `<div class="text-xs font-semibold text-slate-500">Showing all ${totalCount} songs</div>`;
                 return;
             }
 
             const startIdx = (currentPage - 1) * songsPerPage + 1;
             const endIdx = Math.min(currentPage * songsPerPage, totalCount);
-
             let buttonsHtml = '';
             
-            buttonsHtml += `
-                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors">
-                    Previous
-                </button>
-            `;
+            buttonsHtml += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors">Previous</button>`;
 
             for (let i = 1; i <= totalPages; i++) {
                 if (totalPages <= 6 || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    buttonsHtml += `
-                        <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}">
-                            ${i}
-                        </button>
-                    `;
+                    buttonsHtml += `<button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}">${i}</button>`;
                 } else if (i === 2 && currentPage > 3) {
                     buttonsHtml += `<span class="text-slate-400 text-xs px-1">...</span>`;
                 } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
@@ -394,28 +382,17 @@
                 }
             }
 
-            buttonsHtml += `
-                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors">
-                    Next
-                </button>
-            `;
+            buttonsHtml += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:pointer-events-none transition-colors">Next</button>`;
 
             paginationContainer.innerHTML = `
-                <div class="text-xs font-semibold text-slate-500">
-                    Showing <span class="text-slate-800">${startIdx}</span> to <span class="text-slate-800">${endIdx}</span> of <span class="text-slate-800">${totalCount}</span> songs
-                </div>
-                <div class="flex items-center gap-1">
-                    ${buttonsHtml}
-                </div>
+                <div class="text-xs font-semibold text-slate-500">Showing <span class="text-slate-800">${startIdx}</span> to <span class="text-slate-800">${endIdx}</span> of <span class="text-slate-800">${totalCount}</span> songs</div>
+                <div class="flex items-center gap-1">${buttonsHtml}</div>
             `;
         }
 
         function renderSongs() {
             const listBody = document.getElementById('songs-list-body');
             if (!listBody) return;
-            
-            // CRITICAL FIX: Explicitly wipe out inner HTML content at the start of execution
-            // This prevents duplicate DOM inserts caused by background global network requests.
             listBody.innerHTML = '';
             
             const searchVal = document.getElementById('songSearch').value.toLowerCase();
@@ -437,7 +414,6 @@
 
             if (filtered.length > 0) {
                 const totalPages = Math.ceil(filtered.length / songsPerPage);
-                
                 if (currentPage > totalPages) currentPage = totalPages;
                 if (currentPage < 1) currentPage = 1;
 
@@ -450,9 +426,7 @@
                         <td class="px-6 py-4">
                             <div class="font-bold text-indigo-900 hover:text-indigo-700 transition-colors text-base">${song.name}</div>
                             <div class="sm:hidden text-xs italic mt-1">
-                                <span class="text-emerald-600 font-semibold">${song.artist}</span> 
-                                <span class="text-slate-300 mx-1">•</span> 
-                                <span class="text-purple-600 font-medium">${song.album}</span>
+                                <span class="text-emerald-600 font-semibold">${song.artist}</span> <span class="text-slate-300 mx-1">•</span> <span class="text-purple-600 font-medium">${song.album}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 hidden sm:table-cell">
@@ -471,7 +445,6 @@
                 `).join('');
 
                 renderPaginationControls(filtered.length, totalPages);
-                
                 tableContainer.classList.remove('hidden');
                 emptyState.classList.add('hidden');
             } else {
@@ -483,12 +456,9 @@
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const searchQuery = urlParams.get('search');
-
             if (searchQuery) {
                 const searchInput = document.getElementById('songSearch');
-                if (searchInput) {
-                    searchInput.value = decodeURIComponent(searchQuery);
-                }
+                if (searchInput) searchInput.value = decodeURIComponent(searchQuery);
             }
             renderSongs();
         };
