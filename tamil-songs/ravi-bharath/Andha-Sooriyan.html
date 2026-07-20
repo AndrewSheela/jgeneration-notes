@@ -227,7 +227,7 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
- 
+ <div id="global-header"></div>
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -541,6 +541,11 @@ document.getElementById('btn-img').addEventListener('click',async()=>{
 });
 document.addEventListener('keydown',e=>{if(e.altKey&&e.key==='ArrowUp')doTranspose(+1);if(e.altKey&&e.key==='ArrowDown')doTranspose(-1);if(e.ctrlKey&&e.key==='p'){e.preventDefault();window.print();}});
 applyFontLevel();reRenderMusic();
+</script>
+<script>
+    fetch("/header.html")
+        .then(res => res.text())
+        .then(data => document.getElementById("global-header").innerHTML = data);
 </script>
 </body>
 </html>
