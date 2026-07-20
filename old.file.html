@@ -144,7 +144,7 @@
         }
 
         const songData = [
-            { name: "Andha-Sooriyan", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/jgeneration-notes/tamil-songs/ravi-bharath/Andha-Sooriyan.html" },
+            { name: "Andha-Sooriyan", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/keyboard-notes/tamil-songs/ravi-bharath/Andha-Sooriyan.html" },
             { name: "Egipthilirunthu-Kaananukku", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/keyboard-notes/tamil-songs/ravi-bharath/Egipthilirunthu-Kaananukku.html" },
             { name: "Netru-Indru-Naalai", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/keyboard-notes/tamil-songs/ravi-bharath/Netru-Indru-Naalai.html" },
             { name: "Pidhavay-Potri", artist: "Ravi Bharath", album: "Aayathamaa Vol 1", lang: "Tamil", url: "/keyboard-notes/tamil-songs/ravi-bharath/Pidhavay-Potri.html" },
@@ -219,7 +219,7 @@
             { name: "Kalangaathae Maganae Thigai", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Kalangaathae-Maganae-Thigai.html" },
             { name: "En Aathmaavum Sareeramum", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/En-Aathmaavum-Sareeramum.html" },
             { name: "En Maeipparae Yaesayya", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/En-Maeipparae-Yaesayya.html" },
-            { name: "Engal Devan Vallavarae", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Engal Devan-Vallavarae.html" },
+            { name: "Engal Devan Vallavarae", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Engal-Devan-Vallavarae.html" },
             { name: "Engu Pogireer", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Engu-Pogireer.html" },
             { name: "Ennai Thaedi Yesu Vanthaar", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Ennai-Thaedi-Yesu-Vanthaar.html" },
             { name: "En Deivam Yesu", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/En-Deivam-Yesu.html" },
@@ -424,13 +424,9 @@
                             <span class="${getLangBadgeClass(song.lang)} text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide">${song.lang}</span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button 
-                                data-url="${song.url}" 
-                                onclick="window.open(this.getAttribute('data-url'), '_blank')" 
-                                class="inline-flex items-center text-blue-600 hover:text-blue-800 font-bold text-sm bg-transparent border-none cursor-pointer p-0 outline-none focus:outline-none"
-                            >
+                            <a href="${song.url}" class="text-blue-600 hover:text-blue-800 font-bold text-sm inline-flex items-center">
                                 Notes <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"></path></svg>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                 `).join('');
