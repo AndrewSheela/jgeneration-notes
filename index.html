@@ -34,27 +34,13 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
     </style>
-    <script>
-        // ANTI-DUPLICATION RADAR: Intercepts and destroys external layout injections instantly
-        const observer = new MutationObserver((mutations) => {
-            let searchPanels = document.querySelectorAll('main.max-w-5xl');
-            if (searchPanels.length > 1) {
-                // Keep the very first original one, discard subsequent injected lookalikes
-                for (let i = 1; i < searchPanels.length; i++) {
-                    searchPanels[i].remove();
-                }
-            }
-        });
-        observer.observe(document.documentElement, { childList: true, subtree: true });
-    </script>
 </head>
 <body class="min-h-screen">
 
-    <!-- Global header container -->
     <div id="globalHeader"></div>
 
-    <!-- The core single structure -->
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+    <!-- Unique, non-standard layout container to stay hidden from global search conflicts -->
+    <main class="local-notes-wrapper max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
         <div class="glass sticky top-6 z-20 p-5 rounded-2xl shadow-xl mb-8">
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -92,7 +78,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-20">
+        <div id="local-table-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-20">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-200">
@@ -103,7 +89,7 @@
                             <th class="px-6 py-4 text-right">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="songs-list-body"></tbody>
+                    <tbody id="local-songs-body"></tbody>
                 </table>
             </div>
             <div id="pagination-container" class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between flex-wrap gap-4"></div>
@@ -144,7 +130,6 @@
                 var el = document.querySelector(map[ACTIVE_NAV]);
                 if (el) el.classList.add('active');
                 
-                // If it's a subdomain, make sure the global search doesn't step on our local DOM
                 if (!document.querySelector('script[src^="/js/global-search.js"]')) {
                     var script = document.createElement("script");
                     script.src = "/js/global-search.js?v=" + Date.now();
@@ -354,7 +339,7 @@
         function changePage(page) {
             currentPage = page;
             renderSongs();
-            document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
+            document.querySelector('.local-notes-wrapper').scrollIntoView({ behavior: 'smooth' });
         }
 
         function renderPaginationControls(totalCount, totalPages) {
@@ -391,13 +376,13 @@
         }
 
         function renderSongs() {
-            const listBody = document.getElementById('songs-list-body');
+            const listBody = document.getElementById('local-songs-body');
             if (!listBody) return;
             listBody.innerHTML = '';
             
             const searchVal = document.getElementById('songSearch').value.toLowerCase();
             const emptyState = document.getElementById('empty-state');
-            const tableContainer = listBody.closest('.bg-white');
+            const tableContainer = document.getElementById('local-table-card');
 
             if (searchVal !== lastSearchVal) {
                 currentPage = 1;
@@ -453,7 +438,8 @@
             }
         }
 
-        window.onload = function() {
+        // Final cleanly targeted init block
+        window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const searchQuery = urlParams.get('search');
             if (searchQuery) {
@@ -461,7 +447,7 @@
                 if (searchInput) searchInput.value = decodeURIComponent(searchQuery);
             }
             renderSongs();
-        };
+        });
     </script>
 </body>
 </html>
