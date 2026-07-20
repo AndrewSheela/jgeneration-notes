@@ -65,3 +65,18 @@
         }
     });
 </script>
+<script>
+    fetch("/header.html")
+        .then(res => res.text())
+        .then(data => {
+            document.getElementById("global-header").innerHTML = data;
+            
+            // Sync the search bar text if coming from a redirected search
+            const params = new URLSearchParams(window.location.search);
+            const activeQuery = params.get('search');
+            if (activeQuery) {
+                const headerInput = document.getElementById('globalHeaderSearch');
+                if (headerInput) headerInput.value = decodeURIComponent(activeQuery);
+            }
+        });
+</script>
