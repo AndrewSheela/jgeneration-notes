@@ -119,7 +119,7 @@
             </div>
 
             <div id="modalContent" class="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -254,7 +254,6 @@
         const songsPerPage = 100;
         let lastSearchVal = "";
         
-        // Modal state tracking fields
         let currentModalMode = ''; 
         let currentModalData = {}; 
 
@@ -279,17 +278,14 @@
             }
         }
 
-        // --- NEW: MODAL WITH NESTED LIVE SEARCH LOGIC ---
         function openModal(mode) {
             currentModalMode = mode;
             const modal = document.getElementById('browseModal');
             const title = document.getElementById('modalTitle');
             const searchInput = document.getElementById('modalSearchInput');
             
-            // Clear prior filter search text
             searchInput.value = '';
             
-            // Compile items map
             currentModalData = {};
             songData.forEach(song => {
                 const key = mode === 'album' ? song.album : song.artist;
@@ -298,7 +294,6 @@
 
             title.innerText = mode === 'album' ? 'Browse by Album' : 'Browse by Artist';
             
-            // Generate full base layout items
             filterModalItems();
 
             modal.classList.remove('hidden');
@@ -380,24 +375,17 @@
             `;
 
             for (let i = 1; i <= totalPages; i++) {
-                if (totalPages > 6) {
-                    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                        buttonsHtml += `
-                            <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}">
-                                ${i}
-                            </button>
-                        `;
-                    } else if (i === 2 && currentPage > 3) {
-                        buttonsHtml += `<span class="text-slate-400 text-xs px-1">...</span>`;
-                    } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
-                        buttonsHtml += `<span class="text-slate-400 text-xs px-1">...</span>`;
-                    }
-                } else {
+                // Unified verification condition removes layout redundancies
+                if (totalPages <= 6 || i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
                     buttonsHtml += `
                         <button onclick="changePage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}">
                             ${i}
                         </button>
                     `;
+                } else if (i === 2 && currentPage > 3) {
+                    buttonsHtml += `<span class="text-slate-400 text-xs px-1">...</span>`;
+                } else if (i === totalPages - 1 && currentPage < totalPages - 2) {
+                    buttonsHtml += `<span class="text-slate-400 text-xs px-1">...</span>`;
                 }
             }
 
@@ -481,22 +469,18 @@
             }
         }
 
-    window.onload = function() {
-    // 1. Look for "?search=..." in the link address
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchQuery = urlParams.get('search');
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
 
-    if (searchQuery) {
-        // 2. Put that text into your search box automatically
-        const searchInput = document.getElementById('songSearch');
-        if (searchInput) {
-            searchInput.value = decodeURIComponent(searchQuery);
-        }
-    }
-
-    // 3. Display the matching songs
-    renderSongs();
-};
+            if (searchQuery) {
+                const searchInput = document.getElementById('songSearch');
+                if (searchInput) {
+                    searchInput.value = decodeURIComponent(searchQuery);
+                }
+            }
+            renderSongs();
+        };
     </script>
 </body>
 </html>
