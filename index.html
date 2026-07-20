@@ -39,7 +39,7 @@
 </head>
 <body class="min-h-screen">
 
-    <!-- Global header container -->
+    <!-- Global header target element -->
     <div id="globalHeader"></div>
 
     <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -123,9 +123,9 @@
     <div id="footer"></div>
 
     <script>
-        // Anti-duplication execution lock
-        if (typeof window.appInitialized === "undefined") {
-            window.appInitialized = true;
+        // Use a strict variable flag to stop concurrent dynamic calls 
+        if (typeof window.notesAppInitialized === "undefined") {
+            window.notesAppInitialized = true;
 
             var ACTIVE_NAV = "notes"; 
 
@@ -140,6 +140,7 @@
                 var el = document.querySelector(map[ACTIVE_NAV]);
                 if (el) el.classList.add('active');
                 
+                // Only embed cross-origin search files if not already populated
                 if (!document.querySelector('script[src^="/js/global-search.js"]')) {
                     var script = document.createElement("script");
                     script.src = "/js/global-search.js?v=" + Date.now();
@@ -196,7 +197,7 @@
             { name: "Unnathathin Aaviyai Unthan", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Unnathathin-Aaviyai-Unthan.html" },
             { name: "Yaar Pirikka Mudiyum En", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yaar-Pirikka-Mudiyum-En.html" },
             { name: "Yaar Vaendum Naatha", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yaar-Vaendum-Naatha.html" },
-            { name: "Yesu Nam Pinigalai", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu Nam-Pinigalai.html" },
+            { name: "Yesu Nam Pinigalai", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Nam-Pinigalai.html" },
             { name: "Yesu Nammodu Indru", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Nammodu-Indru.html" },
             { name: "Yesu Pothumae Enakku", artist: "Berchmans", album: "Visuvaasa Geethangal", lang: "Tamil", url: "/keyboard-notes/tamil-songs/berchmans/visuvaasa-geethangal/Yesu-Pothumae-Enakku.html" },
             { name: "Halleluiah Elshadai", artist: "Paul Thangiah", album: "Paraloga Devanae", lang: "Tamil", url: "/keyboard-notes/tamil-songs/paul-thangiah/Halleluia-Elshadai.html" },
@@ -411,7 +412,11 @@
 
         function renderSongs() {
             const listBody = document.getElementById('songs-list-body');
-            if (!listBody) return; // Guard clause against missing viewports
+            if (!listBody) return;
+            
+            // CRITICAL FIX: Explicitly wipe out inner HTML content at the start of execution
+            // This prevents duplicate DOM inserts caused by background global network requests.
+            listBody.innerHTML = '';
             
             const searchVal = document.getElementById('songSearch').value.toLowerCase();
             const emptyState = document.getElementById('empty-state');
