@@ -36,7 +36,7 @@
     </style>
 </head>
 <body class="min-h-screen">
-
+<div id="global-header"></div>
     <!-- Page Banner: Keyboard Notes -->
     <div class="relative overflow-hidden" style="background: linear-gradient(120deg, #1e1b4b 0%, #3b1f5c 45%, #7c2d12 100%);">
         <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 20%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 60%, #fff 1px, transparent 1px); background-size: 60px 60px;"></div>
@@ -457,5 +457,10 @@
             renderSongs();
         });
     </script>
+    <script>
+    fetch("/header.html")
+        .then(res => res.text())
+        .then(data => document.getElementById("global-header").innerHTML = data);
+</script>
 </body>
 </html>
