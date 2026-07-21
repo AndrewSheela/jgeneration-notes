@@ -10,59 +10,12 @@
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-4">
                     <a href="/" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Home</a>
-                    <a href="/piano-player/index.html" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Player</a>
+                    <a href="/piano-player/index.html" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">Piano Player</a>
                     <a href="/about-us.html" class="px-4 py-2.5 rounded-xl text-base font-extrabold hover:bg-white/10 text-slate-200 hover:text-white transition-all">About</a>
                 </div>
-            </div>
-            
-            <!-- Modern UI Global Search Bar (Increased Height & Width) -->
-            <div class="relative w-full md:w-96 group">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-amber-300 transition-colors">
-                    <svg class="w-5 h-5" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </span>
-                <input 
-                    type="text" 
-                    id="globalHeaderSearch" 
-                    placeholder="Search all songs, artists..." 
-                    onkeydown="handleHeaderSearch(event)"
-                    class="w-full pl-11 pr-5 py-3 bg-white/10 border border-white/20 rounded-xl text-base text-white placeholder-slate-400 focus:outline-none focus:bg-white focus:text-slate-900 focus:placeholder-slate-500 focus:ring-2 focus:ring-amber-300 transition-all shadow-inner"
-                >
             </div>
 
         </div>
     </div>
 </nav>
 
-<script>
-    // Global routing logic for the header search
-    function handleHeaderSearch(event) {
-        if (event.key === 'Enter') {
-            const query = encodeURIComponent(event.target.value.trim());
-
-            const localSearch = document.getElementById('songSearch');
-            if (localSearch) {
-                // Already on a page with the local song list - just filter in place
-                localSearch.value = event.target.value;
-                if (typeof renderSongs === 'function') {
-                    renderSongs();
-                }
-            } else {
-                // Not on the songs page - redirect there with the query
-                window.location.href = '/?search=' + query;
-            }
-        }
-    }
-
-    // If this page loaded with ?search=... in the URL (e.g. redirected from
-    // another page), reflect that value back into the header search box.
-    (function syncHeaderSearchFromUrl() {
-        const params = new URLSearchParams(window.location.search);
-        const activeQuery = params.get('search');
-        if (activeQuery) {
-            const headerInput = document.getElementById('globalHeaderSearch');
-            if (headerInput) headerInput.value = decodeURIComponent(activeQuery);
-        }
-    })();
-</script>

@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN (needed for the shared site header) -->
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root{
     --bg-0:#08090c;
@@ -408,6 +410,8 @@
 </style>
 </head>
 <body>
+<!-- Global Header Container -->
+<div id="global-header"></div>
 <div id="app">
 
   <div class="topbar">
@@ -2705,6 +2709,29 @@ requestAnimationFrame(renderFrame);
 requestAnimationFrame(schedulerTick);
 
 })();
+</script>
+
+<!-- Global Header Fetch Script -->
+<script>
+    fetch("/header.html")
+        .then(res => res.text())
+        .then(data => {
+            const container = document.getElementById("global-header");
+            container.innerHTML = data;
+
+            // Scripts inserted via innerHTML do NOT execute automatically.
+            // Manually re-create each <script> tag so header.html's search
+            // logic (handleHeaderSearch, etc.) actually runs.
+            container.querySelectorAll("script").forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+            });
+        });
 </script>
 </body>
 </html>
