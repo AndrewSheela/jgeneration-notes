@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="/global-data.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Andha Sooriyan</title>
@@ -547,7 +546,19 @@ applyFontLevel();reRenderMusic();
 <script>
     fetch("/header.html")
         .then(res => res.text())
-        .then(data => document.getElementById("global-header").innerHTML = data);
+        .then(data => {
+            const container = document.getElementById("global-header");
+            container.innerHTML = data;
+            container.querySelectorAll("script").forEach(oldScript => {
+                const newScript = document.createElement("script");
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript);
+            });
+        });
 </script>
 </body>
 </html>
