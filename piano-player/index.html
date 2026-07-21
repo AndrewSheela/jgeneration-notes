@@ -1,0 +1,2710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteFall — MIDI Piano Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#08090c;
+    --bg-1:#101319;
+    --panel:#151822;
+    --panel-2:#1b1f2b;
+    --panel-border:#282d3b;
+    --gold:#d8b273;
+    --gold-dim:#8a7040;
+    --gold-glow:rgba(216,178,115,0.35);
+    --text-0:#f3f1ea;
+    --text-1:#9298a8;
+    --text-2:#5c6274;
+    --blue:#4da3ff;
+    --blue-deep:#1c4d8f;
+    --blue-glow:#8fc4ff;
+    --green:#48e08a;
+    --green-deep:#147a45;
+    --green-glow:#a7f7c8;
+    --key-white:#f7f2df;
+    --key-white-lit:#fffcf0;
+    --key-black:#141417;
+    --radius-lg:18px;
+    --radius-md:12px;
+    --radius-sm:8px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 1200px 700px at 50% -10%, #1a1e2a 0%, transparent 60%),
+      radial-gradient(ellipse 900px 600px at 100% 110%, #16131c 0%, transparent 55%),
+      var(--bg-0);
+    color:var(--text-0);
+    font-family:var(--font-body);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    display:flex; flex-direction:column;
+    height:100vh; width:100vw;
+    position:relative;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; gap:18px;
+    padding:12px 20px;
+    background:linear-gradient(180deg, rgba(21,24,34,0.95), rgba(16,19,25,0.85));
+    border-bottom:1px solid var(--panel-border);
+    backdrop-filter:blur(10px);
+    z-index:20;
+    flex-wrap:wrap;
+  }
+  .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-display); font-weight:700; font-size:19px;
+    letter-spacing:0.2px;
+    margin-right:6px;
+  }
+  .brand .dot{
+    width:10px; height:10px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--gold), var(--gold-dim));
+    box-shadow:0 0 12px var(--gold-glow);
+  }
+  .brand small{
+    display:block; font-family:var(--font-mono); font-size:10px; color:var(--text-2);
+    font-weight:400; letter-spacing:0.5px; margin-top:1px;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--panel-2);
+    border:1px solid var(--panel-border);
+    color:var(--text-0);
+    font-family:var(--font-body); font-weight:600; font-size:13px;
+    padding:9px 14px; border-radius:var(--radius-sm);
+    cursor:pointer; transition:all .15s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--gold-dim); background:#20242f;}
+  .btn:active{transform:translateY(1px);}
+  .btn.primary{
+    background:linear-gradient(180deg, #e2c48c, var(--gold));
+    color:#241a06; border-color:transparent;
+    box-shadow:0 2px 14px var(--gold-glow);
+  }
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.icon{ padding:9px 11px; }
+  .btn svg{ width:15px; height:15px; flex-shrink:0; }
+
+  .transport{ display:flex; align-items:center; gap:8px; }
+
+  .field{
+    display:flex; flex-direction:column; gap:3px;
+  }
+  .field label{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.7px;
+    color:var(--text-2); font-weight:600;
+  }
+  select, .select{
+    background:var(--panel-2); color:var(--text-0);
+    border:1px solid var(--panel-border); border-radius:var(--radius-sm);
+    padding:7px 10px; font-family:var(--font-body); font-size:12.5px; font-weight:600;
+    cursor:pointer; outline:none;
+  }
+  select:hover{ border-color:var(--gold-dim); }
+
+  .spacer{ flex:1; }
+
+  .time-readout{
+    font-family:var(--font-mono); font-size:13px; color:var(--text-1);
+    display:flex; align-items:center; gap:6px;
+    min-width:110px; justify-content:center;
+  }
+  .time-readout .cur{ color:var(--text-0); }
+
+  .volume-wrap{ display:flex; align-items:center; gap:8px; }
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    height:4px; border-radius:2px; background:#2a2f3d;
+    outline:none; cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:var(--gold); box-shadow:0 0 8px var(--gold-glow); cursor:pointer;
+    border:2px solid #1a1508;
+  }
+  #volumeSlider{ width:70px; }
+
+  .seek-wrap{ position:relative; width:180px; flex-shrink:1; display:flex; align-items:center; }
+  .seek-wrap input[type="range"]{ width:100%; }
+  #markerTicks{ position:absolute; left:0; right:0; top:50%; height:0; pointer-events:none; }
+  .marker-tick{
+    position:absolute; top:-9px; width:2px; height:16px;
+    background:var(--gold); opacity:0.85; pointer-events:auto; cursor:pointer;
+    transform:translateX(-50%);
+  }
+  .marker-tick:hover{ background:#fff; }
+
+  .toggle-row{
+    display:flex; align-items:center; gap:9px;
+    font-size:12.5px; font-weight:600; color:var(--text-0);
+    padding:8px 2px; cursor:pointer; user-select:none;
+  }
+  .toggle-row input{ width:15px; height:15px; accent-color:var(--gold); cursor:pointer; }
+
+  .marker-row{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 10px; border-radius:var(--radius-sm);
+    background:var(--panel); border:1px solid var(--panel-border);
+    margin-bottom:7px;
+  }
+  .marker-row .mtime{
+    font-family:var(--font-mono); font-size:11px; color:var(--gold); flex-shrink:0;
+  }
+  .marker-row .mlabel{
+    flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
+  }
+  .marker-row .mdel{
+    flex-shrink:0; background:none; border:none; color:var(--text-2); cursor:pointer; font-size:15px;
+    line-height:1; padding:2px 4px;
+  }
+  .marker-row .mdel:hover{ color:#e0645a; }
+
+  /* ---------- Main stage ---------- */
+  .stage{
+    position:relative; flex:1; min-height:0;
+    display:flex; flex-direction:column;
+    background:var(--bg-1);
+  }
+
+  #songNameBanner{
+    position:absolute; top:50%; left:50%;
+    transform:translate(calc(-50% + 65vw), -50%);
+    opacity:0;
+    z-index:30; pointer-events:none;
+    white-space:nowrap;
+  }
+  #songNameBanner.playing-anim{
+    /* Total 4s: 1s slide in, 2s hold in center, 1s slide out.
+       Keep this in sync with BANNER_DURATION in the script below. */
+    animation: songBannerMove 4s cubic-bezier(0.4,0,0.2,1) forwards;
+  }
+  @keyframes songBannerMove{
+    0%   { transform:translate(calc(-50% + 65vw), -50%); opacity:0; }
+    5%   { opacity:1; }
+    25%  { transform:translate(-50%, -50%); opacity:1; }
+    75%  { transform:translate(-50%, -50%); opacity:1; }
+    95%  { opacity:1; }
+    100% { transform:translate(calc(-50% - 70vw), -50%); opacity:0; }
+  }
+  #songNameBanner .inner{
+    background:rgba(14,16,22,0.9);
+    border:1px solid var(--panel-border);
+    border-left:4px solid var(--gold);
+    border-radius:14px;
+    padding:16px 36px;
+    backdrop-filter:blur(8px);
+    box-shadow:0 14px 44px rgba(0,0,0,0.55), 0 0 34px var(--gold-glow);
+  }
+  #songNameBanner .label{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:2.5px; text-transform:uppercase;
+    color:var(--text-2); margin-bottom:5px;
+  }
+  #songNameBanner .title{
+    font-family:var(--font-display); font-weight:700; font-size:27px; color:var(--text-0);
+    max-width:70vw; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  #fallWrap{ position:relative; flex:1; min-height:0; overflow:hidden; }
+  #fallCanvas{ position:absolute; inset:0; display:block; width:100%; height:100%; }
+
+  .fall-fade-top{
+    position:absolute; top:0; left:0; right:0; height:60px;
+    background:linear-gradient(180deg, var(--bg-1), transparent);
+    pointer-events:none; z-index:5;
+  }
+
+  #hitline{
+    position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    box-shadow:0 0 14px 1px var(--gold-glow);
+    pointer-events:none; z-index:6;
+  }
+
+  #chordHud{
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:0; /* set via JS above keyboard */
+    padding:11px 30px;
+    background:rgba(15,17,23,0.72);
+    border:1px solid var(--panel-border);
+    border-radius:999px;
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; gap:22px;
+    opacity:0; transition:opacity .25s ease, transform .2s ease;
+    z-index:8; pointer-events:none;
+    white-space:nowrap;
+  }
+  #chordHud.show{ opacity:1; }
+  #chordHud .current-chord{
+    font-family:var(--font-display); font-weight:800; font-size:40px;
+    color:var(--gold);
+    text-shadow:0 0 22px var(--gold-glow);
+    letter-spacing:0.5px;
+    transition:opacity .15s ease;
+  }
+  #chordHud .arrow-sep{
+    font-size:16px; color:rgba(255,255,255,0.14); font-weight:400; line-height:1;
+  }
+  #chordHud .next-chord{
+    font-family:var(--font-display); font-weight:700; font-size:24px;
+    color:rgba(255,255,255,0.24);
+    letter-spacing:0.4px;
+    transition:opacity .15s ease;
+  }
+  #chordHud .next-chord.empty{ display:none; }
+  #chordHud .arrow-sep.empty{ display:none; }
+
+  /* ---------- Empty state ---------- */
+  #emptyState{
+    position:absolute; inset:0; z-index:15;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(ellipse at 50% 40%, rgba(216,178,115,0.05), transparent 60%);
+  }
+  #emptyState .card{
+    text-align:center; max-width:440px; padding:40px 36px;
+    border:1px dashed var(--panel-border); border-radius:var(--radius-lg);
+    background:rgba(21,24,34,0.5);
+    transition:border-color .2s ease, background .2s ease;
+  }
+  #emptyState .card.dragover{
+    border-color:var(--gold); background:rgba(216,178,115,0.06);
+  }
+  #emptyState h1{
+    font-family:var(--font-display); font-size:26px; margin-bottom:10px;
+    font-weight:700;
+  }
+  #emptyState p{ color:var(--text-1); font-size:14px; line-height:1.6; margin-bottom:22px; }
+  #emptyState .legend-preview{
+    display:flex; justify-content:center; gap:22px; margin-top:26px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--text-2);
+  }
+  #emptyState .legend-preview span{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  /* ---------- Keyboard ---------- */
+  #keyboardWrap{
+    position:relative; height:150px; flex-shrink:0;
+    background:linear-gradient(180deg,#0c0e13,#06070a);
+    border-top:1px solid var(--panel-border);
+    padding:0 0 10px 0;
+  }
+  #keyboard{ position:relative; width:100%; height:100%; }
+  .key{
+    position:absolute; top:0; border-radius:0 0 5px 5px;
+    transition:background .06s ease, box-shadow .08s ease;
+    cursor:default;
+  }
+  .key.white{
+    height:100%; background:var(--key-white);
+    border:1px solid #2b271e; border-top:none; z-index:1;
+    box-shadow:inset 0 -10px 14px -10px rgba(0,0,0,0.18);
+  }
+  .key.black{
+    height:60%; background:var(--key-black);
+    border:1px solid #000; border-top:none; z-index:2;
+    box-shadow:0 4px 6px rgba(0,0,0,0.5), inset 0 -8px 10px -6px rgba(0,0,0,0.5);
+  }
+  .key.white.active{
+    background:linear-gradient(180deg, var(--active-glow,#8fc4ff), var(--active-core,#4da3ff));
+    box-shadow:0 0 18px 2px var(--active-glow,#8fc4ff), inset 0 -6px 10px -4px rgba(0,0,0,0.3);
+  }
+  .key.black.active{
+    background:linear-gradient(180deg, var(--active-core,#4da3ff), var(--active-deep,#1c4d8f));
+    box-shadow:0 0 16px 2px var(--active-glow,#8fc4ff);
+  }
+  .key.white.flash{
+    filter:brightness(1.55);
+    box-shadow:0 0 30px 10px var(--active-glow,#8fc4ff), inset 0 -6px 10px -4px rgba(0,0,0,0.3);
+  }
+  .key.black.flash{
+    filter:brightness(1.85);
+    box-shadow:0 0 26px 10px var(--active-glow,#8fc4ff);
+  }
+  .key .label{
+    position:absolute; bottom:10px; left:0; right:0; text-align:center;
+    font-family:var(--font-body); font-weight:800; color:#2c2820; pointer-events:none;
+    user-select:none; letter-spacing:0.1px; transition:color .1s ease;
+  }
+  .key.black .label{ color:#eef0f5; bottom:8px; }
+  .key.white.active .label{ color:rgba(6,9,16,0.85); }
+  .key.black.active .label{ color:rgba(255,255,255,0.98); }
+
+  /* ---------- Track drawer ---------- */
+  #drawerToggle{
+    position:absolute; top:14px; right:14px; z-index:12;
+  }
+  #trackDrawer{
+    position:absolute; top:0; right:0; height:100%; width:300px;
+    background:rgba(17,19,27,0.92); backdrop-filter:blur(10px);
+    border-left:1px solid var(--panel-border);
+    transform:translateX(100%); transition:transform .25s ease;
+    z-index:11; padding:64px 16px 16px 16px; overflow-y:auto;
+  }
+  #trackDrawer.open{ transform:translateX(0); }
+  #trackDrawer h3{
+    font-family:var(--font-display); font-size:13px; text-transform:uppercase;
+    letter-spacing:1px; color:var(--text-2); margin-bottom:12px;
+  }
+  .track-row{
+    display:flex; align-items:center; gap:10px;
+    padding:10px; border-radius:var(--radius-sm);
+    background:var(--panel); border:1px solid var(--panel-border);
+    margin-bottom:8px;
+  }
+  .track-row .dot2{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .track-row .tname{
+    flex:1; font-size:12.5px; font-weight:600; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap;
+  }
+  .track-row select{ padding:5px 7px; font-size:11px; }
+
+  .legend-footer{
+    margin-top:18px; padding-top:14px; border-top:1px solid var(--panel-border);
+    font-family:var(--font-mono); font-size:11px; color:var(--text-2); line-height:1.8;
+  }
+  .legend-footer span{ display:flex; align-items:center; gap:7px; margin-bottom:4px; }
+
+  .chord-hint{
+    font-size:11px; color:var(--text-2); line-height:1.5; margin-bottom:10px;
+  }
+  .chord-row{
+    display:flex; align-items:center; gap:6px;
+    padding:8px 10px; border-radius:var(--radius-sm);
+    background:var(--panel); border:1px solid var(--panel-border);
+    margin-bottom:7px; flex-wrap:nowrap;
+  }
+  .chord-row .chord-auto-name{
+    font-family:var(--font-mono); font-weight:600; font-size:12px;
+    color:var(--gold); min-width:56px; flex-shrink:0;
+  }
+  .chord-row .arrow{ color:var(--text-2); font-size:11px; flex-shrink:0; }
+  .chord-row select{ padding:5px 4px; font-size:10.5px; flex:1; min-width:0; }
+  .chord-row.overridden{ border-color:var(--gold-dim); }
+
+  ::-webkit-scrollbar{ width:8px; }
+  ::-webkit-scrollbar-thumb{ background:#2a2f3d; border-radius:4px; }
+
+  @media (max-width:760px){
+    .topbar{ gap:10px; padding:10px 12px; }
+    .brand small{ display:none; }
+    #keyboardWrap{ height:110px; }
+    #trackDrawer{ width:78vw; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        NoteFall
+        <small>MIDI PIANO VISUALIZER</small>
+      </div>
+    </div>
+
+    <button class="btn primary" id="uploadBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+      Load MIDI
+    </button>
+    <input type="file" id="fileInput" accept=".mid,.midi" hidden>
+
+    <div class="transport">
+      <button class="btn icon" id="playBtn" title="Play / Pause">
+        <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <button class="btn icon" id="stopBtn" title="Stop">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+      </button>
+    </div>
+
+    <div class="time-readout">
+      <span class="cur" id="curTime">0:00</span> / <span id="totalTime">0:00</span>
+    </div>
+
+    <div class="seek-wrap">
+      <input type="range" id="seekSlider" min="0" max="100" value="0" step="0.01">
+      <div id="markerTicks"></div>
+    </div>
+    <button class="btn icon" id="addMarkerBtn" title="Add marker at current position">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+
+    <div class="spacer"></div>
+
+    <div class="field">
+      <label>Keyboard</label>
+      <select id="rangeSelect">
+        <option value="song">Song notes</option>
+        <option value="3">3 Octaves</option>
+        <option value="5">5 Octaves</option>
+        <option value="7" selected>Full 88-key</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Speed</label>
+      <select id="speedSelect">
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+    </div>
+
+    <div class="volume-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="var(--text-1)"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.7">
+    </div>
+  </div>
+
+  <div class="stage">
+    <div id="songNameBanner">
+      <div class="inner">
+        <div class="label">Now Playing</div>
+        <div class="title" id="songNameText">—</div>
+      </div>
+    </div>
+
+    <div id="fallWrap">
+      <canvas id="fallCanvas"></canvas>
+      <div class="fall-fade-top"></div>
+      <div id="hitline"></div>
+      <div id="chordHud">
+        <span class="current-chord" id="chordHudCurrent">—</span>
+        <span class="arrow-sep" id="chordHudArrow">→</span>
+        <span class="next-chord" id="chordHudNext"></span>
+      </div>
+
+      <div id="emptyState">
+        <div class="card" id="dropCard">
+          <h1>Drop your song in</h1>
+          <p>Load a .mid file to watch its notes fall in real time. Chord parts light up blue, the lead line glows green, and chord names appear as they play.</p>
+          <button class="btn primary" id="uploadBtn2">Choose a MIDI file</button>
+          <div class="legend-preview">
+            <span><span class="swatch" style="background:var(--blue)"></span> Chords</span>
+            <span><span class="swatch" style="background:var(--green)"></span> Lead</span>
+            <span><span class="swatch" style="background:var(--gold)"></span> Chord name</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn icon" id="drawerToggle" title="Track mixer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="1.8" fill="currentColor"/><circle cx="16" cy="12" r="1.8" fill="currentColor"/><circle cx="11" cy="18" r="1.8" fill="currentColor"/></svg>
+      </button>
+
+      <div id="trackDrawer">
+        <h3>Track Mixer</h3>
+        <div id="trackList"></div>
+        <div class="legend-footer">
+          <span><span class="swatch" style="background:var(--blue)"></span> Chord part — colored blue</span>
+          <span><span class="swatch" style="background:var(--green)"></span> Lead part — colored green</span>
+          <span><span class="swatch" style="background:#555b6b"></span> Off — hidden &amp; muted</span>
+        </div>
+
+        <h3 style="margin-top:22px;">Song Key / Scale</h3>
+        <p class="chord-hint">Sets how sharps/flats are spelled — for chord names and for the note labels on both the keyboard and falling notes. Pick your song's actual key so, e.g., D Major spells its notes D E F# G A B C# instead of using flats.</p>
+        <select id="keySelect" style="width:100%;"></select>
+
+        <h3 style="margin-top:22px;">Chord Names</h3>
+        <p class="chord-hint">Leave both as "Auto" to keep detection. Pick a root + quality to relabel every occurrence of that detected chord — handy for enharmonic fixes (e.g. D#m7 → Ebm7).</p>
+        <div id="chordNameList"></div>
+
+        <h3 style="margin-top:22px;">Practice Tools</h3>
+        <label class="toggle-row"><input type="checkbox" id="metronomeToggle"> Metronome click</label>
+        <label class="toggle-row"><input type="checkbox" id="countInToggle"> Count-in (1 bar before play)</label>
+        <label class="toggle-row"><input type="checkbox" id="measureGridToggle" checked> Show measure grid</label>
+        <label class="toggle-row"><input type="checkbox" id="measureFillToggle"> Fill screen per measure</label>
+        <p class="chord-hint">Instead of a fixed scroll speed, stretches exactly one measure to fill the whole screen at a time, flowing into the next as it completes.</p>
+        <label class="toggle-row"><input type="checkbox" id="performanceModeToggle"> Performance mode (for screen recording)</label>
+        <p class="chord-hint">Turns off the glow effects and caps resolution to reduce CPU load — useful when recording with OBS or on lower-powered machines.</p>
+
+        <h3 style="margin-top:22px;">Markers</h3>
+        <p class="chord-hint">Use the <strong>+</strong> button next to the seek bar to drop a marker at the current position, then jump back to it any time.</p>
+        <div id="markerList"></div>
+
+        <h3 style="margin-top:22px;">Export Video</h3>
+        <p class="chord-hint">Renders the video directly — no live playback, no screen sharing, no permission dialogs. Works like MuseScore's video export: it draws every frame and renders the audio separately, then combines them into a real MP4 file. Always outputs at a fixed 1280×720 HD, regardless of your browser window size. Needs Chrome or Edge.</p>
+        <div class="field">
+          <label>Keyboard range</label>
+          <select id="offlineExportRangeSelect" style="width:100%;">
+            <option value="song" selected>Song notes</option>
+            <option value="3">3 Octaves</option>
+            <option value="5">5 Octaves</option>
+            <option value="7">Full 88-key</option>
+          </select>
+        </div>
+        <label class="toggle-row"><input type="checkbox" id="offlineHighQualityToggle"> High quality (sharper, takes longer)</label>
+        <button class="btn primary" id="offlineExportBtn" style="width:100%; justify-content:center; margin-top:10px;">Export Video</button>
+        <div id="offlineExportStatus" style="font-size:11.5px;color:var(--text-2);margin-top:10px; line-height:1.5;"></div>
+
+        <h3 style="margin-top:22px;">Screen Record (fallback)</h3>
+        <p class="chord-hint">Records exactly what's on screen in real time — useful if the offline export above isn't supported in your browser. Click Start, then choose <strong>"This Tab"</strong> when your browser asks what to share. It plays the song from the start and stops automatically at the end. Records as WebM (most reliable audio/video sync); the results panel gives you a ready-made command to convert it with ffmpeg or HandBrake if you need MP4 for editing software. Shortcut: <strong>Ctrl+V</strong> (⌘V on Mac) starts or stops recording.</p>
+        <label class="toggle-row"><input type="checkbox" id="exportAudioToggle" checked> Include audio</label>
+        <div class="field" style="margin-top:6px;">
+          <label>Keyboard range while recording</label>
+          <select id="exportRangeSelect" style="width:100%;">
+            <option value="song" selected>Song notes</option>
+            <option value="3">3 Octaves</option>
+            <option value="5">5 Octaves</option>
+            <option value="7">Full 88-key</option>
+          </select>
+        </div>
+        <button class="btn" id="exportVideoBtn" style="width:100%; justify-content:center; margin-top:10px;">Start Screen Recording</button>
+        <div id="exportStatus" style="font-size:11.5px;color:var(--text-2);margin-top:10px; line-height:1.5;"></div>
+      </div>
+    </div>
+
+    <div id="keyboardWrap">
+      <div id="keyboard"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   MIDI FILE PARSER  (Standard MIDI File, formats 0/1)
+   ========================================================= */
+function readVarLen(view, pos){
+  let result = 0, b;
+  do{ b = view.getUint8(pos++); result = (result<<7) | (b & 0x7f); } while(b & 0x80);
+  return {value: result, pos};
+}
+
+function parseMidiBytes(buffer){
+  const view = new DataView(buffer);
+  let pos = 0;
+  function readStr(len){ let s=""; for(let i=0;i<len;i++) s += String.fromCharCode(view.getUint8(pos+i)); pos+=len; return s; }
+
+  if (readStr(4) !== "MThd") throw new Error("Not a valid MIDI file");
+  const headerLen = view.getUint32(pos); pos += 4;
+  const format = view.getUint16(pos); pos += 2;
+  const numTracks = view.getUint16(pos); pos += 2;
+  let division = view.getUint16(pos); pos += 2;
+  pos += (headerLen - 6);
+  if (division & 0x8000) division = 96; // SMPTE fallback, rare
+
+  const tracks = [];
+  for (let t=0; t<numTracks; t++){
+    if (readStr(4) !== "MTrk") throw new Error("Malformed MIDI: expected MTrk chunk");
+    const trackLen = view.getUint32(pos); pos += 4;
+    const trackEnd = pos + trackLen;
+    const events = [];
+    let tick = 0, runningStatus = null, trackName = "";
+
+    while (pos < trackEnd){
+      const vlq = readVarLen(view,pos); pos = vlq.pos; tick += vlq.value;
+      let statusByte = view.getUint8(pos);
+      if (statusByte & 0x80){ runningStatus = statusByte; pos++; }
+      else { statusByte = runningStatus; }
+
+      if (statusByte === 0xFF){
+        const metaType = view.getUint8(pos); pos++;
+        const lv = readVarLen(view,pos); pos = lv.pos; const len = lv.value;
+        if (metaType === 0x51){
+          const mpqn = (view.getUint8(pos)<<16)|(view.getUint8(pos+1)<<8)|view.getUint8(pos+2);
+          events.push({tick, type:"tempo", mpqn});
+        } else if (metaType === 0x58 && len >= 2){
+          const numerator = view.getUint8(pos);
+          const denominator = Math.pow(2, view.getUint8(pos+1));
+          events.push({tick, type:"timesig", numerator, denominator});
+        } else if (metaType === 0x03 || metaType === 0x04){
+          let s=""; for(let i=0;i<len;i++) s += String.fromCharCode(view.getUint8(pos+i));
+          if (s.trim()) trackName = s.trim();
+        }
+        pos += len;
+      } else if (statusByte === 0xF0 || statusByte === 0xF7){
+        const lv = readVarLen(view,pos); pos = lv.pos; pos += lv.value;
+      } else {
+        const type = statusByte & 0xF0;
+        const channel = statusByte & 0x0F;
+        if (type===0x90 || type===0x80 || type===0xA0 || type===0xB0 || type===0xE0){
+          const d1 = view.getUint8(pos); pos++;
+          const d2 = view.getUint8(pos); pos++;
+          if (type===0x90 && d2>0) events.push({tick, type:"noteOn", channel, note:d1, velocity:d2});
+          else if (type===0x90 || type===0x80) events.push({tick, type:"noteOff", channel, note:d1});
+        } else if (type===0xC0 || type===0xD0){
+          pos++;
+        }
+      }
+    }
+    tracks.push({events, trackName});
+  }
+  return {format, numTracks, division, tracks};
+}
+
+/* =========================================================
+   BUILD PLAYABLE SONG MODEL
+   ========================================================= */
+function buildTempoMap(tracks, division){
+  let tempos = [];
+  tracks.forEach(tr => tr.events.forEach(e => { if (e.type==="tempo") tempos.push({tick:e.tick, mpqn:e.mpqn}); }));
+  tempos.sort((a,b)=>a.tick-b.tick);
+  if (!tempos.length || tempos[0].tick > 0) tempos.unshift({tick:0, mpqn:500000});
+  const segs = [];
+  let curTick = 0, curSec = 0, curMpqn = tempos[0].mpqn;
+  for (const t of tempos){
+    curSec += (t.tick - curTick) * (curMpqn/1e6) / division;
+    curTick = t.tick; curMpqn = t.mpqn;
+    segs.push({tick:curTick, sec:curSec, mpqn:curMpqn});
+  }
+  function tickToSec(tick){
+    let seg = segs[0];
+    for (let i=0;i<segs.length;i++){ if (segs[i].tick <= tick) seg = segs[i]; else break; }
+    return seg.sec + (tick - seg.tick) * (seg.mpqn/1e6) / division;
+  }
+  return {tickToSec};
+}
+
+function buildBeatGrid(tracks, division, tempoMap, totalDurationSec){
+  let sigs = [];
+  tracks.forEach(tr => tr.events.forEach(e => { if (e.type==="timesig") sigs.push({tick:e.tick, num:e.numerator, den:e.denominator}); }));
+  sigs.sort((a,b)=>a.tick-b.tick);
+  if (!sigs.length || sigs[0].tick > 0) sigs.unshift({tick:0, num:4, den:4});
+
+  const beats = [];
+  let measureNumber = 1;
+  const safetyLimit = 20000; // avoid runaway loops on malformed files
+
+  for (let i=0; i<sigs.length && beats.length < safetyLimit; i++){
+    const sig = sigs[i];
+    const nextTick = (i+1 < sigs.length) ? sigs[i+1].tick : null;
+    const beatTicks = division * (4/sig.den);
+    if (!(beatTicks > 0) || !(sig.num > 0)) continue;
+    let tick = sig.tick;
+    let beatInMeasure = 0;
+    while (beats.length < safetyLimit){
+      const sec = tempoMap.tickToSec(tick);
+      if (nextTick !== null && tick >= nextTick) break;
+      if (nextTick === null && sec > totalDurationSec + 4) break;
+      beats.push({tick, sec, numerator:sig.num, beatInMeasure, measureNumber, isDownbeat: beatInMeasure===0});
+      beatInMeasure++;
+      if (beatInMeasure >= sig.num){ beatInMeasure = 0; measureNumber++; }
+      tick += beatTicks;
+    }
+  }
+  return beats;
+}
+
+function extractParts(tracks){
+  // key by track+channel so both multi-track and single-track/multi-channel files split cleanly
+  const parts = {};
+  tracks.forEach((tr, trackIdx) => {
+    const active = {};
+    tr.events.forEach(e => {
+      if (e.type === "noteOn"){
+        const key = trackIdx+"-"+e.channel;
+        if (!parts[key]) parts[key] = {trackIdx, channel:e.channel, name: tr.trackName, notes: []};
+        const noteKey = e.channel*128 + e.note;
+        active[noteKey] = {startTick:e.tick, velocity:e.velocity, note:e.note};
+      } else if (e.type === "noteOff"){
+        const noteKey = e.channel*128 + e.note;
+        if (active[noteKey]){
+          const key = trackIdx+"-"+e.channel;
+          parts[key].notes.push({
+            note: active[noteKey].note,
+            velocity: active[noteKey].velocity,
+            startTick: active[noteKey].startTick,
+            endTick: e.tick
+          });
+          delete active[noteKey];
+        }
+      }
+    });
+  });
+  return Object.values(parts).filter(p => p.notes.length);
+}
+
+function classifyPart(part){
+  if (part.channel === 9) return "off"; // drum channel
+  const notes = part.notes.slice().sort((a,b)=>a.startTick-b.startTick);
+  if (notes.length < 4) return "lead";
+  const tolerance = 12;
+  let simultaneous = 0;
+  for (let i=0;i<notes.length;i++){
+    for (let j=i+1;j<notes.length;j++){
+      if (notes[j].startTick - notes[i].startTick > tolerance) break;
+      simultaneous++; break;
+    }
+  }
+  const ratio = simultaneous / notes.length;
+  return ratio > 0.28 ? "chord" : "lead";
+}
+
+const PITCH_NAMES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"]; // default ("Auto") spelling
+
+// Proper key-signature-aware spelling tables, used when a specific song key is selected.
+const SHARP_FULL = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const FLAT_FULL  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const F_SHARP_MAJOR_TABLE = SHARP_FULL.slice();
+F_SHARP_MAJOR_TABLE[5] = "E#"; // F# major's 7th degree is E#, not F natural
+
+const KEY_OPTIONS = [
+  {value:"",   label:"Auto (default)", table:null},
+  {value:"C",  label:"C Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"G",  label:"G Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"D",  label:"D Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"A",  label:"A Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"E",  label:"E Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"B",  label:"B Major",  table:SHARP_FULL,          group:"Major Keys"},
+  {value:"F#", label:"F# Major", table:F_SHARP_MAJOR_TABLE, group:"Major Keys"},
+  {value:"F",  label:"F Major",  table:FLAT_FULL,           group:"Major Keys"},
+  {value:"Bb", label:"Bb Major", table:FLAT_FULL,           group:"Major Keys"},
+  {value:"Eb", label:"Eb Major", table:FLAT_FULL,           group:"Major Keys"},
+  {value:"Ab", label:"Ab Major", table:FLAT_FULL,           group:"Major Keys"},
+  {value:"Db", label:"Db Major", table:FLAT_FULL,           group:"Major Keys"},
+  // Minor keys share their relative major's key signature, so each reuses that table.
+  {value:"Am",  label:"A Minor",  table:SHARP_FULL,          group:"Minor Keys"}, // relative of C Major
+  {value:"Em",  label:"E Minor",  table:SHARP_FULL,          group:"Minor Keys"}, // relative of G Major
+  {value:"Bm",  label:"B Minor",  table:SHARP_FULL,          group:"Minor Keys"}, // relative of D Major
+  {value:"F#m", label:"F# Minor", table:SHARP_FULL,          group:"Minor Keys"}, // relative of A Major
+  {value:"C#m", label:"C# Minor", table:SHARP_FULL,          group:"Minor Keys"}, // relative of E Major
+  {value:"G#m", label:"G# Minor", table:SHARP_FULL,          group:"Minor Keys"}, // relative of B Major
+  {value:"D#m", label:"D# Minor", table:F_SHARP_MAJOR_TABLE, group:"Minor Keys"}, // relative of F# Major
+  {value:"Dm",  label:"D Minor",  table:FLAT_FULL,           group:"Minor Keys"}, // relative of F Major
+  {value:"Gm",  label:"G Minor",  table:FLAT_FULL,           group:"Minor Keys"}, // relative of Bb Major
+  {value:"Cm",  label:"C Minor",  table:FLAT_FULL,           group:"Minor Keys"}, // relative of Eb Major
+  {value:"Fm",  label:"F Minor",  table:FLAT_FULL,           group:"Minor Keys"}, // relative of Ab Major
+  {value:"Bbm", label:"Bb Minor", table:FLAT_FULL,           group:"Minor Keys"}  // relative of Db Major
+];
+
+function getActivePitchNames(){
+  if (!state.selectedKey) return PITCH_NAMES;
+  const opt = KEY_OPTIONS.find(o => o.value === state.selectedKey);
+  return (opt && opt.table) ? opt.table : PITCH_NAMES;
+}
+
+const CHORD_TEMPLATES = [
+  {name:"9",    intervals:[0,2,4,7,10]},
+  {name:"m9",   intervals:[0,2,3,7,10]},
+  {name:"M9",   intervals:[0,2,4,7,11]},
+  {name:"M7",   intervals:[0,4,7,11]},
+  {name:"7",    intervals:[0,4,7,10]},
+  {name:"m7",   intervals:[0,3,7,10]},
+  {name:"m7b5", intervals:[0,3,6,10]},
+  {name:"dim7", intervals:[0,3,6,9]},
+  {name:"6",    intervals:[0,4,7,9]},
+  {name:"m6",   intervals:[0,3,7,9]},
+  {name:"7sus4",intervals:[0,5,7,10]},
+  {name:"sus2", intervals:[0,2,7]},
+  {name:"sus4", intervals:[0,5,7]},
+  {name:"aug",  intervals:[0,4,8]},
+  {name:"dim",  intervals:[0,3,6]},
+  {name:"m",    intervals:[0,3,7]},
+  {name:"",     intervals:[0,4,7]}
+];
+
+// Options for the manual chord-name override selector
+const ROOT_OPTIONS = ["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B"];
+const QUALITY_OPTIONS = [
+  {value:"maj",   label:"Major",  suffix:""},
+  {value:"m",     label:"Minor",  suffix:"m"},
+  {value:"M7",    label:"Maj7",   suffix:"M7"},
+  {value:"7",     label:"Dom7",   suffix:"7"},
+  {value:"m7",    label:"Min7",   suffix:"m7"},
+  {value:"m7b5",  label:"m7b5",   suffix:"m7b5"},
+  {value:"dim7",  label:"dim7",   suffix:"dim7"},
+  {value:"6",     label:"6",      suffix:"6"},
+  {value:"m6",    label:"m6",     suffix:"m6"},
+  {value:"7sus4", label:"7sus4",  suffix:"7sus4"},
+  {value:"sus2",  label:"sus2",   suffix:"sus2"},
+  {value:"sus4",  label:"sus4",   suffix:"sus4"},
+  {value:"aug",   label:"aug",    suffix:"aug"},
+  {value:"dim",   label:"dim",    suffix:"dim"},
+  {value:"9",     label:"9",      suffix:"9"},
+  {value:"m9",    label:"m9",     suffix:"m9"},
+  {value:"M9",    label:"Maj9",   suffix:"M9"}
+];
+
+function nameChord(midiNotes){
+  const pitchNames = getActivePitchNames();
+  const pcs = Array.from(new Set(midiNotes.map(n => ((n%12)+12)%12)));
+  if (pcs.length < 2) return null;
+  let best = null;
+  for (const root of pcs){
+    const intervalSet = new Set(pcs.map(pc => (pc - root + 12) % 12));
+    for (const tmpl of CHORD_TEMPLATES){
+      if (tmpl.intervals.length !== intervalSet.size) continue;
+      if (!tmpl.intervals.every(v => intervalSet.has(v))) continue;
+      if (!best || tmpl.intervals.length > best.size){
+        const bassPc = (Math.min(...midiNotes) % 12 + 12) % 12;
+        let label = pitchNames[root] + tmpl.name;
+        if (bassPc !== root) label += "/" + pitchNames[bassPc];
+        best = {label, size: tmpl.intervals.length};
+      }
+    }
+  }
+  return best ? best.label : null;
+}
+
+function buildChordGroups(chordNotesAbs, division){
+  const tolerance = Math.max(1, Math.round(division/8));
+  const sorted = chordNotesAbs.slice().sort((a,b)=>a.startTick-b.startTick);
+  const groups = [];
+  let cur = null;
+  for (const n of sorted){
+    if (cur && (n.startTick - cur.startTick) <= tolerance){ cur.notes.push(n); }
+    else { if (cur) groups.push(cur); cur = {startTick:n.startTick, notes:[n]}; }
+  }
+  if (cur) groups.push(cur);
+  return groups.filter(g => g.notes.length >= 2).map(g => {
+    g.endTick = Math.max(...g.notes.map(n=>n.endTick));
+    g.minNote = Math.min(...g.notes.map(n=>n.note));
+    g.maxNote = Math.max(...g.notes.map(n=>n.note));
+    g.name = nameChord(g.notes.map(n=>n.note));
+    return g;
+  }).filter(g => g.name);
+}
+
+/* =========================================================
+   APP STATE
+   ========================================================= */
+const state = {
+  song: null,          // {parts, notesFlat, chordGroups, totalDuration, minPitch, maxPitch, division}
+  playing: false,
+  songTime: 0,
+  startCtxTime: 0,
+  speed: 1,
+  rangeMode: "7",
+  keyRange: [21,108],
+  layout: null,        // {whiteW, blackW, minX, xFor}
+  scheduled: new Set(),
+  scheduledClicks: new Set(),
+  isSeeking: false,
+  chordOverrides: {},  // autoDetectedName -> {root, qual, label}
+  metronomeOn: false,
+  countInOn: false,
+  showMeasureGrid: true,
+  markers: [],          // {sec, label}
+  performanceMode: false,
+  songName: "",
+  selectedKey: "",
+  measureFillMode: false,
+};
+
+function displayChordName(autoName){
+  const o = state.chordOverrides[autoName];
+  return o ? o.label : autoName;
+}
+
+let audioCtx = null;
+let masterGain = null;
+
+function ensureAudio(){
+  if (!audioCtx){
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = parseFloat(document.getElementById("volumeSlider").value);
+    masterGain.connect(audioCtx.destination);
+  }
+}
+
+function isBlackPc(pc){ return [1,3,6,8,10].includes(pc); }
+// Left-edge offsets (in white-key-width units) for each pitch class within an octave,
+// modeled on real piano key geometry: black keys aren't centered between white keys,
+// they lean asymmetrically (C#/F# lean left, D#/A# lean right, G# sits centered).
+const OCT_OFFSET = [0, 0.583, 1, 1.667, 2, 3, 3.583, 4, 4.583, 5, 5.667, 6];
+const BLACK_KEY_RATIO = 0.58; // black key width, relative to white key width
+function noteName(n){ return getActivePitchNames()[((n%12)+12)%12]; }
+
+/* =========================================================
+   LOAD & PROCESS SONG
+   ========================================================= */
+function rebuildSongFromParts(parts, division, minPitch, maxPitch){
+  const notesFlat = [];
+  const chordAbsNotes = [];
+  let totalDuration = 0;
+
+  parts.forEach(part => {
+    if (part.role === "off") return;
+    part.notes.forEach(n => {
+      totalDuration = Math.max(totalDuration, n.endSec);
+      notesFlat.push({
+        pitch: n.pitch, startSec: n.startSec, endSec: n.endSec,
+        role: part.role, velocity: n.velocity
+      });
+      if (part.role === "chord"){
+        chordAbsNotes.push({note:n.pitch, startTick:n.startTick, endTick:n.endTick});
+      }
+    });
+  });
+
+  const chordGroupsRaw = buildChordGroups(chordAbsNotes, division);
+  notesFlat.sort((a, b) => a.startSec - b.startSec);
+
+  state.song = {
+    parts, notesFlat, division,
+    totalDuration: totalDuration || 1,
+    minPitch: minPitch===127?21:minPitch,
+    maxPitch: maxPitch===0?108:maxPitch,
+    chordGroupsTicks: chordGroupsRaw
+  };
+
+  // Now convert chord group tick ranges to seconds using the same tempoMap logic stored on window (recreated per load)
+  state.song.chordGroups = chordGroupsRaw.map(g => ({
+    startSec: state._tickToSec(g.startTick),
+    endSec: state._tickToSec(g.endTick),
+    minNote: g.minNote, maxNote: g.maxNote, name: g.name,
+    pitches: g.notes.map(n => n.note)
+  }));
+
+  if (state._parsedTracks && state._tempoMap){
+    state.song.beatGrid = buildBeatGrid(state._parsedTracks, division, state._tempoMap, state.song.totalDuration);
+    state.song.measures = state.song.beatGrid.filter(b => b.isDownbeat);
+  } else {
+    state.song.beatGrid = [];
+    state.song.measures = [];
+  }
+
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("totalTime").textContent = fmtTime(state.song.totalDuration);
+  document.getElementById("seekSlider").max = state.song.totalDuration;
+
+  state.songTime = 0;
+  state.scheduled.clear();
+  state.scheduledClicks.clear();
+  renderMarkerTicks();
+  renderMarkerList();
+  applyRangeMode();
+  renderChordNameOverrides();
+}
+
+function fmtTime(sec){
+  sec = Math.max(0, sec|0);
+  const m = Math.floor(sec/60), s = sec%60;
+  return m + ":" + (s<10?"0":"") + s;
+}
+
+/* =========================================================
+   KEYBOARD RANGE + LAYOUT
+   ========================================================= */
+function computeRange(mode){
+  const song = state.song;
+  let min, max;
+  if (mode === "song" && song){
+    min = song.minPitch - 2;
+    max = song.maxPitch + 2;
+  } else if (mode === "3"){
+    const mid = song ? Math.round((song.minPitch+song.maxPitch)/2) : 60;
+    min = mid - 18; max = mid + 17;
+  } else if (mode === "5"){
+    const mid = song ? Math.round((song.minPitch+song.maxPitch)/2) : 60;
+    min = mid - 30; max = mid + 30;
+  } else {
+    min = 21; max = 108; // full 88-key A0 - C8
+  }
+  min = Math.max(0, Math.min(min, 120));
+  max = Math.min(127, Math.max(max, min+11));
+  if (isBlackPc(min%12)) min -= 1;
+  if (isBlackPc(max%12)) max += 1;
+  return [min, max];
+}
+
+function keyboardHeightForMode(mode){
+  const small = window.innerWidth <= 760;
+  if (mode === "song" || mode === "3") return small ? 150 : 215;
+  return small ? 110 : 150;
+}
+
+function applyKeyboardHeight(){
+  document.getElementById("keyboardWrap").style.height = keyboardHeightForMode(state.rangeMode) + "px";
+}
+
+function applyRangeMode(){
+  state.keyRange = computeRange(state.rangeMode);
+  applyKeyboardHeight();
+  renderKeyboard();
+}
+
+function xForNote(n, whiteW){
+  const octave = Math.floor(n/12);
+  const pc = ((n%12)+12)%12;
+  return octave*7*whiteW + OCT_OFFSET[pc]*whiteW;
+}
+
+function renderKeyboard(){
+  const el = document.getElementById("keyboard");
+  const [min, max] = state.keyRange;
+  const whiteCount = countWhites(min, max);
+  const containerWidth = el.clientWidth || window.innerWidth;
+  const whiteW = containerWidth / whiteCount;
+  const blackW = whiteW * BLACK_KEY_RATIO;
+  const minX = xForNote(min, whiteW);
+  state._keyRenderCache = {}; // DOM elements are being rebuilt, so any cached highlight state is stale
+
+  state.layout = {
+    whiteW, blackW, minX,
+    xFor: (n) => xForNote(n, whiteW) - minX
+  };
+
+  el.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  const tallMode = (state.rangeMode === "song" || state.rangeMode === "3");
+  const labelSize = Math.max(9, Math.min(tallMode ? 22 : 15, whiteW * (tallMode ? 0.48 : 0.4)));
+  // white keys first (z-index lower), then blacks
+  for (let n=min; n<=max; n++){
+    const pc = ((n%12)+12)%12;
+    if (isBlackPc(pc)) continue;
+    const div = document.createElement("div");
+    div.className = "key white";
+    div.style.left = state.layout.xFor(n) + "px";
+    div.style.width = whiteW - 1 + "px";
+    div.dataset.note = n;
+    const lbl = document.createElement("div");
+    lbl.className = "label";
+    lbl.style.fontSize = labelSize + "px";
+    lbl.textContent = noteName(n);
+    div.appendChild(lbl);
+    frag.appendChild(div);
+  }
+  for (let n=min; n<=max; n++){
+    const pc = ((n%12)+12)%12;
+    if (!isBlackPc(pc)) continue;
+    const div = document.createElement("div");
+    div.className = "key black";
+    div.style.left = state.layout.xFor(n) + "px";
+    div.style.width = blackW + "px";
+    div.dataset.note = n;
+    const lbl = document.createElement("div");
+    lbl.className = "label";
+    lbl.style.fontSize = Math.max(7.5, labelSize*0.8) + "px";
+    lbl.textContent = noteName(n);
+    div.appendChild(lbl);
+    frag.appendChild(div);
+  }
+  el.appendChild(frag);
+  resizeCanvas();
+}
+
+function countWhites(min, max){
+  let c = 0;
+  for (let n=min; n<=max; n++){ if (!isBlackPc(((n%12)+12)%12)) c++; }
+  return c;
+}
+
+/* =========================================================
+   CANVAS FALL RENDERING
+   ========================================================= */
+const canvas = document.getElementById("fallCanvas");
+const ctx = canvas.getContext("2d");
+const LOOKAHEAD_SEC = 3.6;
+const NOTE_TAIL_BUFFER = 10; // seconds — covers long-held notes that started earlier but may still be sounding
+
+// notesFlat is kept sorted by startSec, so we binary-search into the small
+// window that's actually near the playhead instead of scanning every note
+// in the song on every animation frame. Also reused for the (already
+// chronologically ordered) beat grid.
+function lowerBoundBy(arr, target, keyFn){
+  let lo = 0, hi = arr.length;
+  while (lo < hi){
+    const mid = (lo + hi) >> 1;
+    if (keyFn(arr[mid]) < target) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+function upperBoundBy(arr, target, keyFn){
+  let lo = 0, hi = arr.length;
+  while (lo < hi){
+    const mid = (lo + hi) >> 1;
+    if (keyFn(arr[mid]) <= target) lo = mid + 1; else hi = mid;
+  }
+  return lo;
+}
+const byStartSec = (n) => n.startSec;
+const bySec = (b) => b.sec;
+function getVisibleNoteRange(notesFlat, now, lookahead, tailBuffer){
+  const startIdx = lowerBoundBy(notesFlat, now - tailBuffer, byStartSec);
+  const endIdx = upperBoundBy(notesFlat, now + lookahead, byStartSec);
+  return [startIdx, endIdx];
+}
+
+// Finds the measure (downbeat-to-downbeat span) that 'now' currently falls within,
+// used by measure-fill mode to stretch exactly one measure across the full screen.
+function getCurrentMeasureBounds(now){
+  const measures = state.song.measures;
+  if (!measures || !measures.length) return null;
+  let idx = upperBoundBy(measures, now, bySec) - 1;
+  if (idx < 0) idx = 0;
+  if (idx >= measures.length) idx = measures.length - 1;
+  const start = measures[idx].sec;
+  const rawEnd = (idx + 1 < measures.length) ? measures[idx+1].sec : (state.song.totalDuration + 0.001);
+  const end = Math.max(rawEnd, start + 0.15); // guard against a degenerate zero-length measure
+  return {start, end, measureNumber: measures[idx].measureNumber};
+}
+
+function resizeCanvas(){
+  const wrap = document.getElementById("fallWrap");
+  const maxDpr = state.performanceMode ? 1 : 2;
+  const dpr = Math.min(maxDpr, window.devicePixelRatio || 1);
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width = wrap.clientWidth + "px";
+  canvas.style.height = wrap.clientHeight + "px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  document.getElementById("hitline").style.bottom = "0px";
+  document.getElementById("hitline").style.top = wrap.clientHeight + "px";
+  document.getElementById("chordHud").style.bottom = (document.getElementById("keyboardWrap").clientHeight - 6) + "px";
+}
+
+function colorFor(role){
+  if (role === "chord") return {core:"#4da3ff", deep:"#1c4d8f", glow:"#8fc4ff"};
+  return {core:"#48e08a", deep:"#147a45", glow:"#a7f7c8"};
+}
+
+function drawRoundRect(c,x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+
+function renderFrame(){
+  const wrap = document.getElementById("fallWrap");
+  const h = wrap.clientHeight;
+  ctx.clearRect(0,0,wrap.clientWidth, h);
+
+  if (!state.song || !state.layout){ requestAnimationFrame(renderFrame); return; }
+
+  const now = getSongTime();
+  const layout = state.layout;
+  const [rmin, rmax] = state.keyRange;
+
+  let pxPerSec, drawWinStart, drawWinEnd, currentMeasureNumber = null;
+  const measureBounds = state.measureFillMode ? getCurrentMeasureBounds(now) : null;
+  if (measureBounds){
+    const measureDuration = measureBounds.end - measureBounds.start;
+    pxPerSec = h / measureDuration;
+    drawWinStart = lowerBoundBy(state.song.notesFlat, measureBounds.start - 0.001, byStartSec);
+    drawWinEnd = upperBoundBy(state.song.notesFlat, measureBounds.end, byStartSec);
+    currentMeasureNumber = measureBounds.measureNumber;
+  } else {
+    pxPerSec = h / LOOKAHEAD_SEC;
+    [drawWinStart, drawWinEnd] = getVisibleNoteRange(state.song.notesFlat, now, LOOKAHEAD_SEC, NOTE_TAIL_BUFFER);
+  }
+
+  // Key highlighting always uses the general (wider) window so sustained notes
+  // that started in a previous measure still correctly light up their key.
+  const [keyWinStart, keyWinEnd] = getVisibleNoteRange(state.song.notesFlat, now, LOOKAHEAD_SEC, NOTE_TAIL_BUFFER);
+
+  // measure grid / measure number (drawn first, behind the notes)
+  if (state.showMeasureGrid && state.song.measures && state.song.measures.length){
+    ctx.save();
+    ctx.font = "600 11px 'JetBrains Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    if (currentMeasureNumber !== null){
+      ctx.fillStyle = "rgba(255,255,255,0.32)";
+      ctx.font = "700 13px 'JetBrains Mono', monospace";
+      ctx.fillText("Measure " + currentMeasureNumber, 10, 22);
+    } else {
+      for (const m of state.song.measures){
+        const y = h - (m.sec - now) * pxPerSec;
+        if (y < -20 || y > h) continue;
+        ctx.strokeStyle = "rgba(255,255,255,0.09)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(wrap.clientWidth, y + 0.5);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,0.28)";
+        ctx.fillText(String(m.measureNumber), 8, y - 3);
+      }
+    }
+    ctx.restore();
+  }
+
+  // notes — only touch the small window of notes near the playhead, not the whole song
+  const [winStart, winEnd] = [drawWinStart, drawWinEnd];
+  const perf = state.performanceMode;
+  for (let ni = winStart; ni < winEnd; ni++){
+    const note = state.song.notesFlat[ni];
+    if (note.pitch < rmin || note.pitch > rmax) continue;
+    const yBottom = h - (note.startSec - now) * pxPerSec;
+    const yTop = h - (note.endSec - now) * pxPerSec;
+    if (yBottom < 0 || yTop > h) continue;
+
+    const isBlack = isBlackPc(((note.pitch%12)+12)%12);
+    const x = layout.xFor(note.pitch) + (isBlack ? 0 : 1);
+    const w = (isBlack ? layout.blackW : layout.whiteW) - (isBlack?0:2);
+    const c = colorFor(note.role);
+
+    // Short notes (quavers, semiquavers) get stretched up to a minimum visual
+    // height so their name always has room to render legibly. The bottom edge
+    // (the precise moment the note is hit) is never moved, only the top.
+    const MIN_NOTE_VISUAL_HEIGHT = 34;
+    let yTopAdj = yTop;
+    if (yBottom - yTopAdj < MIN_NOTE_VISUAL_HEIGHT){
+      yTopAdj = yBottom - MIN_NOTE_VISUAL_HEIGHT;
+    }
+
+    const top = Math.max(0, yTopAdj);
+    const bottom = Math.min(h, yBottom);
+    if (bottom - top < 2) continue;
+
+    const grad = ctx.createLinearGradient(0, top, 0, bottom);
+    grad.addColorStop(0, c.core);
+    grad.addColorStop(1, c.deep);
+    if (perf){
+      ctx.fillStyle = grad;
+      drawRoundRect(ctx, x, top, w, bottom-top, 9);
+      ctx.fill();
+    } else {
+      ctx.save();
+      ctx.shadowColor = c.glow;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = grad;
+      drawRoundRect(ctx, x, top, w, bottom-top, 9);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.strokeStyle = "rgba(255,255,255,0.28)";
+    ctx.lineWidth = 1;
+    drawRoundRect(ctx, x+0.5, top+0.5, w-1, Math.max(0,bottom-top-1), 9);
+    ctx.stroke();
+
+    if (bottom - top >= 20){
+      const label = noteName(note.pitch);
+      const maxTextWidth = w - 6; // small side padding so text never touches the edges
+      let fontSize = Math.max(11, Math.min(24, w * 0.62));
+      ctx.font = "800 " + fontSize + "px 'Space Grotesk', sans-serif";
+      let measured = ctx.measureText(label).width;
+      if (measured > maxTextWidth){
+        fontSize *= maxTextWidth / measured;
+        fontSize = Math.max(7, fontSize);
+        ctx.font = "800 " + fontSize + "px 'Space Grotesk', sans-serif";
+      }
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillStyle = "rgba(255,255,255,0.97)";
+      if (perf){
+        ctx.fillText(label, x + w/2, bottom - Math.min(10, (bottom-top)*0.14));
+      } else {
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,0.65)";
+        ctx.shadowBlur = 3;
+        ctx.fillText(label, x + w/2, bottom - Math.min(10, (bottom-top)*0.14));
+        ctx.restore();
+      }
+    }
+  }
+
+  updateKeyHighlights(now, rmin, rmax, keyWinStart, keyWinEnd);
+  updateChordHud(now);
+  requestAnimationFrame(renderFrame);
+}
+
+const KEY_FLASH_WINDOW = 0.15; // seconds of "just pressed" blink after each note attack
+
+function updateKeyHighlights(now, rmin, rmax, winStart, winEnd){
+  const keys = document.getElementById("keyboard").children;
+  const activeMap = {};
+  const flashMap = {};
+  for (let ni = winStart; ni < winEnd; ni++){
+    const note = state.song.notesFlat[ni];
+    if (note.startSec <= now && now <= note.endSec){
+      activeMap[note.pitch] = note.role;
+    }
+    if (now >= note.startSec && (now - note.startSec) < KEY_FLASH_WINDOW){
+      flashMap[note.pitch] = note.role;
+    }
+  }
+  const cache = state._keyRenderCache || (state._keyRenderCache = {});
+  for (const el of keys){
+    const n = parseInt(el.dataset.note, 10);
+    const role = activeMap[n] || flashMap[n];
+    const isFlash = !!flashMap[n];
+    const sig = (role || "") + "|" + isFlash;
+    if (cache[n] === sig) continue; // unchanged since last frame — skip the DOM write entirely
+    cache[n] = sig;
+    if (role){
+      const c = colorFor(role);
+      el.classList.add("active");
+      el.style.setProperty("--active-core", c.core);
+      el.style.setProperty("--active-deep", c.deep);
+      el.style.setProperty("--active-glow", c.glow);
+    } else {
+      el.classList.remove("active");
+    }
+    el.classList.toggle("flash", isFlash);
+  }
+}
+
+let lastChordName = null;
+function updateChordHud(now){
+  const hud = document.getElementById("chordHud");
+  const groups = state.song.chordGroups;
+  let currentIdx = -1;
+  for (let i=0; i<groups.length; i++){
+    const g = groups[i];
+    if (g.startSec <= now + 0.02 && now <= g.endSec + 0.05) currentIdx = i;
+    if (g.startSec > now) break;
+  }
+  if (currentIdx !== -1){
+    const currentEl = document.getElementById("chordHudCurrent");
+    const nextEl = document.getElementById("chordHudNext");
+    const arrowEl = document.getElementById("chordHudArrow");
+    currentEl.textContent = displayChordName(groups[currentIdx].name);
+    const nextGroup = groups[currentIdx + 1];
+    if (nextGroup){
+      nextEl.textContent = displayChordName(nextGroup.name);
+      nextEl.classList.remove("empty");
+      arrowEl.classList.remove("empty");
+    } else {
+      nextEl.classList.add("empty");
+      arrowEl.classList.add("empty");
+    }
+    hud.classList.add("show");
+    lastChordName = groups[currentIdx].name;
+  } else {
+    hud.classList.remove("show");
+  }
+}
+
+/* =========================================================
+   PLAYBACK CLOCK + SCHEDULER
+   ========================================================= */
+function getSongTime(){
+  if (!state.playing || !audioCtx) return state.songTime;
+  return (audioCtx.currentTime - state.startCtxTime) * state.speed;
+}
+
+// Must match the CSS animation-duration on #songNameBanner.playing-anim
+const BANNER_DURATION = 4.0;
+
+function play(){
+  if (!state.song) return;
+  ensureAudio();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+
+  const ctxNow = audioCtx.currentTime;
+  let delay = 0;
+
+  const showBanner = !!state.songName;
+  if (showBanner) delay += BANNER_DURATION;
+
+  if (state.countInOn && state.songTime < 0.01 && state.song.beatGrid.length){
+    const numerator = state.song.beatGrid[0].numerator || 4;
+    const beatDur = state.song.beatGrid.length > 1
+      ? (state.song.beatGrid[1].sec - state.song.beatGrid[0].sec)
+      : 0.5;
+    for (let i=0; i<numerator; i++){
+      playClick(ctxNow + delay + i*beatDur, i===0);
+    }
+    delay += numerator * beatDur;
+  }
+
+  state.startCtxTime = ctxNow + delay - state.songTime/state.speed;
+  state.playing = true;
+  document.getElementById("playIcon").innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+  if (showBanner) showSongNameBanner();
+}
+
+function showSongNameBanner(){
+  const el = document.getElementById("songNameBanner");
+  document.getElementById("songNameText").textContent = state.songName;
+  el.classList.remove("playing-anim");
+  void el.offsetWidth; // force reflow so the animation restarts cleanly on repeated plays
+  el.classList.add("playing-anim");
+}
+
+function pause(){
+  state.songTime = getSongTime();
+  state.playing = false;
+  document.getElementById("playIcon").innerHTML = '<path d="M8 5v14l11-7z"/>';
+}
+
+function stopPlayback(){
+  pause();
+  state.songTime = 0;
+  state.scheduled.clear();
+  state.scheduledClicks.clear();
+  if (typeof mediaRecorder !== "undefined" && mediaRecorder && mediaRecorder.state !== "inactive"){
+    stopVideoExport();
+  }
+}
+
+function seekTo(t){
+  state.songTime = Math.max(0, Math.min(t, state.song ? state.song.totalDuration : 0));
+  if (state.playing) state.startCtxTime = audioCtx.currentTime - state.songTime/state.speed;
+  state.scheduled.clear();
+  state.scheduledClicks.clear();
+}
+
+function playClick(time, accent, ctx, dest){
+  ctx = ctx || audioCtx; dest = dest || masterGain;
+  const osc = ctx.createOscillator();
+  osc.type = "square";
+  osc.frequency.value = accent ? 1600 : 1000;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.0001, time);
+  gain.gain.exponentialRampToValueAtTime(accent ? 0.32 : 0.2, time + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+  osc.connect(gain); gain.connect(dest);
+  osc.start(time); osc.stop(time + 0.06);
+}
+
+function playVoice(midiNote, startTime, duration, velocity, ctx, dest){
+  ctx = ctx || audioCtx; dest = dest || masterGain;
+  const freq = 440 * Math.pow(2, (midiNote-69)/12);
+  const osc1 = ctx.createOscillator(); osc1.type = "triangle"; osc1.frequency.value = freq;
+  const osc2 = ctx.createOscillator(); osc2.type = "sine"; osc2.frequency.value = freq*2.005;
+  const filter = ctx.createBiquadFilter(); filter.type = "lowpass";
+  filter.frequency.setValueAtTime(Math.min(9000, freq*7), startTime);
+  filter.frequency.exponentialRampToValueAtTime(Math.max(400, freq*1.6), startTime + duration + 0.2);
+  const gain = ctx.createGain();
+  const peak = Math.max(0.04, Math.min(1, velocity/127)) * 0.30;
+
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.012);
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0008, peak*0.35), startTime + Math.max(0.05, duration*0.85));
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration + 0.3);
+
+  const og2 = ctx.createGain(); og2.gain.value = 0.25;
+  osc1.connect(filter);
+  osc2.connect(og2); og2.connect(filter);
+  filter.connect(gain); gain.connect(dest);
+
+  osc1.start(startTime); osc2.start(startTime);
+  const stopAt = startTime + duration + 0.35;
+  osc1.stop(stopAt); osc2.stop(stopAt);
+}
+
+function schedulerTick(){
+  if (state.playing && state.song){
+    const now = getSongTime();
+    if (now > state.song.totalDuration + 0.5){
+      stopPlayback();
+    } else {
+      const lookahead = 0.35;
+      const [nStart, nEnd] = getVisibleNoteRange(state.song.notesFlat, now, lookahead, 0.4);
+      for (let idx = nStart; idx < nEnd; idx++){
+        if (state.scheduled.has(idx)) continue;
+        const note = state.song.notesFlat[idx];
+        if (note.startSec < now - 0.4) { state.scheduled.add(idx); continue; }
+        const ctxStart = audioCtx.currentTime + (note.startSec - now)/state.speed;
+        const dur = (note.endSec - note.startSec)/state.speed;
+        playVoice(note.pitch, ctxStart, Math.max(0.05,dur), note.velocity);
+        state.scheduled.add(idx);
+      }
+      if (state.metronomeOn && state.song.beatGrid.length){
+        const bStart = lowerBoundBy(state.song.beatGrid, now - 0.4, bySec);
+        const bEnd = upperBoundBy(state.song.beatGrid, now + lookahead, bySec);
+        for (let idx = bStart; idx < bEnd; idx++){
+          if (state.scheduledClicks.has(idx)) continue;
+          const beat = state.song.beatGrid[idx];
+          if (beat.sec < now - 0.4) { state.scheduledClicks.add(idx); continue; }
+          const ctxTime = audioCtx.currentTime + (beat.sec - now)/state.speed;
+          playClick(ctxTime, beat.isDownbeat);
+          state.scheduledClicks.add(idx);
+        }
+      }
+    }
+  }
+  // UI sync
+  if (state.song && !state.isSeeking){
+    const t = getSongTime();
+    document.getElementById("seekSlider").value = t;
+    document.getElementById("curTime").textContent = fmtTime(t);
+  }
+  requestAnimationFrame(schedulerTick);
+}
+
+/* =========================================================
+   TRACK DRAWER
+   ========================================================= */
+function renderTrackDrawer(){
+  const list = document.getElementById("trackList");
+  list.innerHTML = "";
+  state.song.parts.forEach(part => {
+    const row = document.createElement("div");
+    row.className = "track-row";
+    const dot = document.createElement("div");
+    dot.className = "dot2";
+    dot.style.background = part.role==="chord" ? "var(--blue)" : part.role==="lead" ? "var(--green)" : "#555b6b";
+    const name = document.createElement("div");
+    name.className = "tname";
+    name.textContent = part.name;
+    const sel = document.createElement("select");
+    ["chord","lead","off"].forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r; opt.textContent = r==="chord"?"Chord":r==="lead"?"Lead":"Off";
+      if (r === part.role) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", () => {
+      part.role = sel.value;
+      dot.style.background = part.role==="chord" ? "var(--blue)" : part.role==="lead" ? "var(--green)" : "#555b6b";
+      rebuildSongFromParts(state.song.parts, state.song.division, state.song.minPitch, state.song.maxPitch);
+    });
+    row.appendChild(dot); row.appendChild(name); row.appendChild(sel);
+    list.appendChild(row);
+  });
+}
+
+function recomputeChordNames(){
+  if (!state.song) return;
+  state.song.chordGroups.forEach(g => { g.name = nameChord(g.pitches) || g.name; });
+  renderChordNameOverrides();
+}
+
+function renderChordNameOverrides(){
+  const wrap = document.getElementById("chordNameList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  if (!state.song || !state.song.chordGroups.length){
+    wrap.innerHTML = '<div style="font-size:11.5px;color:var(--text-2);">No chords detected yet.</div>';
+    return;
+  }
+  const uniqueNames = Array.from(new Set(state.song.chordGroups.map(g => g.name))).sort();
+  uniqueNames.forEach(autoName => {
+    const row = document.createElement("div");
+    row.className = "chord-row";
+
+    const label = document.createElement("div");
+    label.className = "chord-auto-name";
+    label.textContent = autoName;
+
+    const arrow = document.createElement("span");
+    arrow.className = "arrow";
+    arrow.textContent = "→";
+
+    const rootSel = document.createElement("select");
+    const rootAuto = document.createElement("option");
+    rootAuto.value = ""; rootAuto.textContent = "Auto";
+    rootSel.appendChild(rootAuto);
+    ROOT_OPTIONS.forEach(r => {
+      const o = document.createElement("option"); o.value = r; o.textContent = r;
+      rootSel.appendChild(o);
+    });
+
+    const qualSel = document.createElement("select");
+    const qualAuto = document.createElement("option");
+    qualAuto.value = ""; qualAuto.textContent = "Auto";
+    qualSel.appendChild(qualAuto);
+    QUALITY_OPTIONS.forEach(q => {
+      const o = document.createElement("option"); o.value = q.value; o.textContent = q.label;
+      qualSel.appendChild(o);
+    });
+
+    const existing = state.chordOverrides[autoName];
+    if (existing){
+      rootSel.value = existing.root;
+      qualSel.value = existing.qual;
+      row.classList.add("overridden");
+    }
+
+    function applyChange(){
+      if (rootSel.value && qualSel.value){
+        const q = QUALITY_OPTIONS.find(q => q.value === qualSel.value);
+        state.chordOverrides[autoName] = {root: rootSel.value, qual: qualSel.value, label: rootSel.value + q.suffix};
+        row.classList.add("overridden");
+      } else if (!rootSel.value && !qualSel.value){
+        delete state.chordOverrides[autoName];
+        row.classList.remove("overridden");
+      }
+    }
+    rootSel.addEventListener("change", applyChange);
+    qualSel.addEventListener("change", applyChange);
+
+    row.appendChild(label); row.appendChild(arrow); row.appendChild(rootSel); row.appendChild(qualSel);
+    wrap.appendChild(row);
+  });
+}
+
+
+/* =========================================================
+   WIRE UP UI
+   ========================================================= */
+function loadFile(file){
+  if (!file) return;
+  state.songName = file.name.replace(/\.(mid|midi)$/i, "");
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      // capture tickToSec before rebuild via closure trick
+      const parsed = parseMidiBytes(e.target.result);
+      const tempoMap = buildTempoMap(parsed.tracks, parsed.division);
+      state._tickToSec = tempoMap.tickToSec;
+      state._parsedTracks = parsed.tracks;
+      state._tempoMap = tempoMap;
+      state.markers = [];
+      processMidiParsed(parsed, tempoMap);
+    } catch(err){
+      alert("Could not read this MIDI file: " + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processMidiParsed(parsed, tempoMap){
+  const rawParts = extractParts(parsed.tracks);
+  let minPitch = 127, maxPitch = 0;
+  const partsOut = rawParts.map((p, idx) => {
+    const role = classifyPart(p);
+    const notesSec = p.notes.map(n => {
+      minPitch = Math.min(minPitch, n.note);
+      maxPitch = Math.max(maxPitch, n.note);
+      return {
+        pitch:n.note, velocity:n.velocity,
+        startSec: tempoMap.tickToSec(n.startTick),
+        endSec: tempoMap.tickToSec(n.endTick),
+        startTick:n.startTick, endTick:n.endTick
+      };
+    });
+    return {id:idx, name:p.name || ("Ch "+(p.channel+1)), channel:p.channel, trackIdx:p.trackIdx, role, notes:notesSec};
+  });
+  rebuildSongFromParts(partsOut, parsed.division, minPitch, maxPitch);
+  renderTrackDrawer();
+}
+
+document.getElementById("uploadBtn").addEventListener("click", () => document.getElementById("fileInput").click());
+document.getElementById("uploadBtn2").addEventListener("click", () => document.getElementById("fileInput").click());
+document.getElementById("fileInput").addEventListener("change", (e) => loadFile(e.target.files[0]));
+
+const dropCard = document.getElementById("dropCard");
+["dragenter","dragover"].forEach(ev => document.body.addEventListener(ev, (e)=>{ e.preventDefault(); dropCard.classList.add("dragover"); }));
+["dragleave","drop"].forEach(ev => document.body.addEventListener(ev, (e)=>{ e.preventDefault(); dropCard.classList.remove("dragover"); }));
+document.body.addEventListener("drop", (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) loadFile(f);
+});
+
+document.getElementById("playBtn").addEventListener("click", () => { state.playing ? pause() : play(); });
+document.getElementById("stopBtn").addEventListener("click", stopPlayback);
+
+const seekSlider = document.getElementById("seekSlider");
+seekSlider.addEventListener("mousedown", ()=> state.isSeeking = true);
+seekSlider.addEventListener("touchstart", ()=> state.isSeeking = true);
+seekSlider.addEventListener("input", (e) => {
+  document.getElementById("curTime").textContent = fmtTime(parseFloat(e.target.value));
+});
+function endSeek(e){
+  state.isSeeking = false;
+  seekTo(parseFloat(e.target.value));
+}
+seekSlider.addEventListener("change", endSeek);
+seekSlider.addEventListener("mouseup", (e)=> endSeek(e));
+seekSlider.addEventListener("touchend", (e)=> endSeek(e));
+
+document.getElementById("speedSelect").addEventListener("change", (e) => {
+  const now = getSongTime();
+  state.speed = parseFloat(e.target.value);
+  if (state.playing) state.startCtxTime = audioCtx.currentTime - now/state.speed;
+  else state.songTime = now;
+  saveSettings();
+});
+
+document.getElementById("rangeSelect").addEventListener("change", (e) => {
+  state.rangeMode = e.target.value;
+  applyRangeMode();
+  saveSettings();
+});
+
+const keySelectEl = document.getElementById("keySelect");
+const keyOptGroups = {};
+KEY_OPTIONS.forEach(opt => {
+  const o = document.createElement("option");
+  o.value = opt.value; o.textContent = opt.label;
+  if (opt.group){
+    if (!keyOptGroups[opt.group]){
+      const g = document.createElement("optgroup");
+      g.label = opt.group;
+      keySelectEl.appendChild(g);
+      keyOptGroups[opt.group] = g;
+    }
+    keyOptGroups[opt.group].appendChild(o);
+  } else {
+    keySelectEl.appendChild(o);
+  }
+});
+keySelectEl.addEventListener("change", (e) => {
+  state.selectedKey = e.target.value;
+  recomputeChordNames();
+  if (state.layout) renderKeyboard();
+  saveSettings();
+});
+
+document.getElementById("volumeSlider").addEventListener("input", (e) => {
+  if (masterGain) masterGain.gain.value = parseFloat(e.target.value);
+});
+
+document.getElementById("drawerToggle").addEventListener("click", () => {
+  document.getElementById("trackDrawer").classList.toggle("open");
+});
+
+window.addEventListener("resize", () => { if (state.layout){ applyKeyboardHeight(); renderKeyboard(); } });
+
+/* =========================================================
+   MARKERS / BOOKMARKS
+   ========================================================= */
+function addMarkerAtCurrentTime(){
+  if (!state.song) return;
+  const t = getSongTime();
+  const label = window.prompt("Marker label:", "Marker " + (state.markers.length + 1));
+  if (label === null) return; // user cancelled
+  state.markers.push({sec: Math.max(0, t), label: label.trim() || ("Marker " + (state.markers.length + 1))});
+  state.markers.sort((a,b) => a.sec - b.sec);
+  renderMarkerTicks();
+  renderMarkerList();
+}
+
+function renderMarkerTicks(){
+  const wrap = document.getElementById("markerTicks");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  if (!state.song || !state.markers.length) return;
+  const total = state.song.totalDuration || 1;
+  state.markers.forEach(m => {
+    const tick = document.createElement("div");
+    tick.className = "marker-tick";
+    tick.style.left = Math.min(100, Math.max(0, (m.sec/total) * 100)) + "%";
+    tick.title = m.label + " (" + fmtTime(m.sec) + ")";
+    tick.addEventListener("click", () => seekTo(m.sec));
+    wrap.appendChild(tick);
+  });
+}
+
+function renderMarkerList(){
+  const wrap = document.getElementById("markerList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  if (!state.markers.length){
+    wrap.innerHTML = '<div style="font-size:11.5px;color:var(--text-2);">No markers yet.</div>';
+    return;
+  }
+  state.markers.forEach((m, idx) => {
+    const row = document.createElement("div");
+    row.className = "marker-row";
+    const time = document.createElement("span");
+    time.className = "mtime";
+    time.textContent = fmtTime(m.sec);
+    const label = document.createElement("span");
+    label.className = "mlabel";
+    label.textContent = m.label;
+    label.title = "Jump to " + m.label;
+    label.addEventListener("click", () => seekTo(m.sec));
+    const del = document.createElement("button");
+    del.className = "mdel";
+    del.textContent = "✕";
+    del.title = "Delete marker";
+    del.addEventListener("click", () => {
+      state.markers.splice(idx, 1);
+      renderMarkerTicks();
+      renderMarkerList();
+    });
+    row.appendChild(time); row.appendChild(label); row.appendChild(del);
+    wrap.appendChild(row);
+  });
+}
+
+document.getElementById("addMarkerBtn").addEventListener("click", addMarkerAtCurrentTime);
+
+/* =========================================================
+   PRACTICE TOOL TOGGLES
+   ========================================================= */
+document.getElementById("metronomeToggle").addEventListener("change", (e) => {
+  state.metronomeOn = e.target.checked;
+  state.scheduledClicks.clear();
+  saveSettings();
+});
+document.getElementById("countInToggle").addEventListener("change", (e) => {
+  state.countInOn = e.target.checked;
+  saveSettings();
+});
+document.getElementById("measureGridToggle").addEventListener("change", (e) => {
+  state.showMeasureGrid = e.target.checked;
+  saveSettings();
+});
+document.getElementById("measureFillToggle").addEventListener("change", (e) => {
+  state.measureFillMode = e.target.checked;
+  saveSettings();
+});
+document.getElementById("performanceModeToggle").addEventListener("change", (e) => {
+  state.performanceMode = e.target.checked;
+  resizeCanvas();
+  saveSettings();
+});
+
+/* =========================================================
+   SETTINGS PERSISTENCE (localStorage)
+   ========================================================= */
+const SETTINGS_KEY = "notefall_settings_v1";
+function loadSettings(){
+  try{ return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveSettings(){
+  try{
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      speed: state.speed,
+      rangeMode: state.rangeMode,
+      metronome: state.metronomeOn,
+      countIn: state.countInOn,
+      showMeasureGrid: state.showMeasureGrid,
+      performanceMode: state.performanceMode,
+      selectedKey: state.selectedKey,
+      measureFillMode: state.measureFillMode
+    }));
+  } catch(e){}
+}
+
+function applySavedSettings(){
+  const saved = loadSettings();
+  if (saved.speed){
+    state.speed = saved.speed;
+    document.getElementById("speedSelect").value = String(saved.speed);
+  }
+  if (saved.rangeMode){
+    state.rangeMode = saved.rangeMode;
+    document.getElementById("rangeSelect").value = saved.rangeMode;
+  }
+  if (typeof saved.metronome === "boolean"){
+    state.metronomeOn = saved.metronome;
+    document.getElementById("metronomeToggle").checked = saved.metronome;
+  }
+  if (typeof saved.countIn === "boolean"){
+    state.countInOn = saved.countIn;
+    document.getElementById("countInToggle").checked = saved.countIn;
+  }
+  if (typeof saved.showMeasureGrid === "boolean"){
+    state.showMeasureGrid = saved.showMeasureGrid;
+    document.getElementById("measureGridToggle").checked = saved.showMeasureGrid;
+  }
+  if (typeof saved.performanceMode === "boolean"){
+    state.performanceMode = saved.performanceMode;
+    document.getElementById("performanceModeToggle").checked = saved.performanceMode;
+  }
+  if (typeof saved.selectedKey === "string"){
+    state.selectedKey = saved.selectedKey;
+    document.getElementById("keySelect").value = saved.selectedKey;
+  }
+  if (typeof saved.measureFillMode === "boolean"){
+    state.measureFillMode = saved.measureFillMode;
+    document.getElementById("measureFillToggle").checked = saved.measureFillMode;
+  }
+}
+
+/* =========================================================
+   OFFLINE VIDEO EXPORT (no live playback, no screen capture —
+   renders every frame directly and mixes audio separately, like MuseScore)
+   ========================================================= */
+function drawKeyboardOffline(ctx, keyRange, activeMap, x0, y0, width, height){
+  const [min, max] = keyRange;
+  const whiteCount = countWhites(min, max);
+  const whiteW = width / whiteCount;
+  const blackW = whiteW * BLACK_KEY_RATIO;
+  const minX = xForNote(min, whiteW);
+  const blackH = height * 0.6;
+  const labelSize = Math.max(9, Math.min(15, whiteW * 0.4));
+
+  for (let n = min; n <= max; n++){
+    const pc = ((n%12)+12)%12;
+    if (isBlackPc(pc)) continue;
+    const x = x0 + xForNote(n, whiteW) - minX;
+    const role = activeMap[n];
+    if (role){
+      const c = colorFor(role);
+      ctx.save();
+      ctx.shadowColor = c.glow;
+      ctx.shadowBlur = 9;
+      const grad = ctx.createLinearGradient(0, y0, 0, y0 + height);
+      grad.addColorStop(0, c.glow);
+      grad.addColorStop(1, c.core);
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y0, whiteW - 1, height);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#f7f2df";
+      ctx.fillRect(x, y0, whiteW - 1, height);
+    }
+    ctx.strokeStyle = "#2b271e";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y0 + 0.5, whiteW - 2, height - 1);
+    ctx.fillStyle = role ? "rgba(6,9,16,0.85)" : "#2c2820";
+    ctx.font = "800 " + labelSize + "px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText(noteName(n), x + whiteW/2, y0 + height - 10);
+  }
+  for (let n = min; n <= max; n++){
+    const pc = ((n%12)+12)%12;
+    if (!isBlackPc(pc)) continue;
+    const x = x0 + xForNote(n, whiteW) - minX;
+    const role = activeMap[n];
+    if (role){
+      const c = colorFor(role);
+      ctx.save();
+      ctx.shadowColor = c.glow;
+      ctx.shadowBlur = 9;
+      const grad = ctx.createLinearGradient(0, y0, 0, y0 + blackH);
+      grad.addColorStop(0, c.core);
+      grad.addColorStop(1, c.deep);
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y0, blackW, blackH);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#141417";
+      ctx.fillRect(x, y0, blackW, blackH);
+    }
+    ctx.fillStyle = role ? "rgba(255,255,255,0.98)" : "#eef0f5";
+    ctx.font = "800 " + Math.max(7.5, labelSize*0.8) + "px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(noteName(n), x + blackW/2, y0 + blackH - 8);
+  }
+}
+
+function drawOfflineFrame(ctx, now, layout, keyRange, W, H, fallH, keyboardH){
+  ctx.fillStyle = "#101319";
+  ctx.fillRect(0, 0, W, H);
+
+  const [rmin, rmax] = keyRange;
+  let pxPerSec, drawWinStart, drawWinEnd;
+  const measureBounds = state.measureFillMode ? getCurrentMeasureBounds(now) : null;
+  if (measureBounds){
+    const dur = measureBounds.end - measureBounds.start;
+    pxPerSec = fallH / dur;
+    drawWinStart = lowerBoundBy(state.song.notesFlat, measureBounds.start - 0.001, byStartSec);
+    drawWinEnd = upperBoundBy(state.song.notesFlat, measureBounds.end, byStartSec);
+  } else {
+    pxPerSec = fallH / LOOKAHEAD_SEC;
+    [drawWinStart, drawWinEnd] = getVisibleNoteRange(state.song.notesFlat, now, LOOKAHEAD_SEC, NOTE_TAIL_BUFFER);
+  }
+  const [keyWinStart, keyWinEnd] = getVisibleNoteRange(state.song.notesFlat, now, LOOKAHEAD_SEC, NOTE_TAIL_BUFFER);
+
+  if (state.showMeasureGrid && state.song.measures && state.song.measures.length){
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    if (measureBounds){
+      ctx.fillStyle = "rgba(255,255,255,0.32)";
+      ctx.font = "700 13px Arial, sans-serif";
+      ctx.fillText("Measure " + measureBounds.measureNumber, 10, 22);
+    } else {
+      ctx.font = "600 11px Arial, sans-serif";
+      for (const m of state.song.measures){
+        const y = fallH - (m.sec - now) * pxPerSec;
+        if (y < -20 || y > fallH) continue;
+        ctx.strokeStyle = "rgba(255,255,255,0.09)";
+        ctx.beginPath(); ctx.moveTo(0, y+0.5); ctx.lineTo(W, y+0.5); ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255,0.28)";
+        ctx.fillText(String(m.measureNumber), 8, y-3);
+      }
+    }
+  }
+
+  const activeMap = {};
+  for (let ni = keyWinStart; ni < keyWinEnd; ni++){
+    const note = state.song.notesFlat[ni];
+    if (note.startSec <= now && now <= note.endSec) activeMap[note.pitch] = note.role;
+  }
+
+  for (let ni = drawWinStart; ni < drawWinEnd; ni++){
+    const note = state.song.notesFlat[ni];
+    if (note.pitch < rmin || note.pitch > rmax) continue;
+    const yBottom = fallH - (note.startSec - now) * pxPerSec;
+    const yTop = fallH - (note.endSec - now) * pxPerSec;
+    if (yBottom < 0 || yTop > fallH) continue;
+
+    const isBlack = isBlackPc(((note.pitch%12)+12)%12);
+    const x = layout.xFor(note.pitch) + (isBlack ? 0 : 1);
+    const w = (isBlack ? layout.blackW : layout.whiteW) - (isBlack?0:2);
+    const c = colorFor(note.role);
+
+    let yTopAdj = yTop;
+    if (yBottom - yTopAdj < 34) yTopAdj = yBottom - 34;
+    const top = Math.max(0, yTopAdj);
+    const bottom = Math.min(fallH, yBottom);
+    if (bottom - top < 2) continue;
+
+    const grad = ctx.createLinearGradient(0, top, 0, bottom);
+    grad.addColorStop(0, c.core);
+    grad.addColorStop(1, c.deep);
+    ctx.save();
+    ctx.shadowColor = c.glow;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = grad;
+    drawRoundRect(ctx, x, top, w, bottom-top, 9);
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = "rgba(255,255,255,0.28)";
+    ctx.lineWidth = 1;
+    drawRoundRect(ctx, x+0.5, top+0.5, w-1, Math.max(0,bottom-top-1), 9);
+    ctx.stroke();
+
+    if (bottom - top >= 20){
+      const label = noteName(note.pitch);
+      const maxTextWidth = w - 6;
+      let fontSize = Math.max(11, Math.min(24, w * 0.62));
+      ctx.font = "800 " + fontSize + "px Arial, sans-serif";
+      let measured = ctx.measureText(label).width;
+      if (measured > maxTextWidth){
+        fontSize = Math.max(7, fontSize * maxTextWidth / measured);
+        ctx.font = "800 " + fontSize + "px Arial, sans-serif";
+      }
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      const lx = x + w/2, ly = bottom - Math.min(10, (bottom-top)*0.14);
+      ctx.lineJoin = "round";
+      ctx.miterLimit = 2;
+      ctx.lineWidth = Math.max(2, fontSize * 0.18);
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.strokeText(label, lx, ly);
+      ctx.fillStyle = "rgba(255,255,255,0.98)";
+      ctx.fillText(label, lx, ly);
+    }
+  }
+
+  let currentChordIdx = -1;
+  const groups = state.song.chordGroups;
+  for (let i = 0; i < groups.length; i++){
+    const g = groups[i];
+    if (g.startSec <= now + 0.02 && now <= g.endSec + 0.05) currentChordIdx = i;
+    if (g.startSec > now) break;
+  }
+  if (currentChordIdx !== -1){
+    const currentName = displayChordName(groups[currentChordIdx].name);
+    const nextGroup = groups[currentChordIdx+1];
+    const nextName = nextGroup ? displayChordName(nextGroup.name) : null;
+
+    ctx.font = "800 40px Arial, sans-serif";
+    const curW = ctx.measureText(currentName).width;
+    let nextW = 0;
+    if (nextName){
+      ctx.font = "700 24px Arial, sans-serif";
+      nextW = ctx.measureText(nextName).width;
+    }
+    const gap = 22, arrowW = nextName ? 22 : 0;
+    const totalW = curW + (nextName ? gap + arrowW + gap + nextW : 0);
+    const boxPad = 30, boxH = 76;
+    const boxW = totalW + boxPad*2;
+    const boxX = W/2 - boxW/2;
+    const boxY = fallH/2 - boxH/2;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = "rgba(15,17,23,0.9)";
+    drawRoundRect(ctx, boxX, boxY, boxW, boxH, boxH/2);
+    ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.shadowColor = "rgba(216,178,115,0.28)";
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = "#282d3b";
+    ctx.lineWidth = 1;
+    drawRoundRect(ctx, boxX+0.5, boxY+0.5, boxW-1, boxH-1, boxH/2);
+    ctx.stroke();
+    ctx.restore();
+
+    let cx = boxX + boxPad;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.save();
+    ctx.shadowColor = "rgba(216,178,115,0.5)";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#d8b273";
+    ctx.font = "800 40px Arial, sans-serif";
+    ctx.fillText(currentName, cx, boxY + boxH/2);
+    ctx.restore();
+    cx += curW + gap;
+    if (nextName){
+      ctx.fillStyle = "rgba(255,255,255,0.14)";
+      ctx.font = "16px Arial, sans-serif";
+      ctx.fillText("\u2192", cx, boxY + boxH/2);
+      cx += arrowW + gap;
+      ctx.fillStyle = "rgba(255,255,255,0.24)";
+      ctx.font = "700 24px Arial, sans-serif";
+      ctx.fillText(nextName, cx, boxY + boxH/2);
+    }
+  }
+
+  drawKeyboardOffline(ctx, keyRange, activeMap, 0, fallH, W, keyboardH);
+}
+
+async function exportVideoOffline(){
+  const statusEl = document.getElementById("offlineExportStatus");
+  const btn = document.getElementById("offlineExportBtn");
+
+  if (!state.song){ statusEl.textContent = "Load a song first."; return; }
+  if (!window.VideoEncoder || !window.AudioEncoder || !window.VideoFrame || !window.AudioData){
+    statusEl.textContent = "This browser doesn't support offline video export — it needs WebCodecs, available in recent Chrome or Edge. The Screen Record option below works as a fallback.";
+    return;
+  }
+
+  const originalBtnText = btn.textContent;
+  btn.disabled = true;
+  statusEl.textContent = "Setting up...";
+
+  try{
+    const { Muxer, ArrayBufferTarget } = await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.mjs");
+
+    const exportRangeMode = document.getElementById("offlineExportRangeSelect").value;
+    const keyRange = computeRange(exportRangeMode);
+
+    const W = 1280, H = 720, keyboardH = 170, fallH = H - keyboardH, fps = 30;
+    const totalDuration = state.song.totalDuration + 1.0;
+    const sampleRate = 44100;
+
+    const whiteCountForLayout = countWhites(keyRange[0], keyRange[1]);
+    const whiteW = W / whiteCountForLayout;
+    const blackW = whiteW * BLACK_KEY_RATIO;
+    const minX = xForNote(keyRange[0], whiteW);
+    const layout = { whiteW, blackW, minX, xFor: (n) => xForNote(n, whiteW) - minX };
+
+    statusEl.textContent = "Rendering audio...";
+    const offlineCtx = new OfflineAudioContext(2, Math.ceil(sampleRate * totalDuration), sampleRate);
+    const offlineGain = offlineCtx.createGain();
+    offlineGain.gain.value = parseFloat(document.getElementById("volumeSlider").value);
+    offlineGain.connect(offlineCtx.destination);
+
+    state.song.notesFlat.forEach(note => {
+      playVoice(note.pitch, note.startSec, Math.max(0.05, note.endSec-note.startSec), note.velocity, offlineCtx, offlineGain);
+    });
+    if (state.metronomeOn && state.song.beatGrid && state.song.beatGrid.length){
+      state.song.beatGrid.forEach(beat => playClick(beat.sec, beat.isDownbeat, offlineCtx, offlineGain));
+    }
+    const renderedBuffer = await offlineCtx.startRendering();
+
+    const muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: { codec: "avc", width: W, height: H },
+      audio: { codec: "aac", numberOfChannels: 2, sampleRate },
+      fastStart: "in-memory"
+    });
+
+    const highQuality = document.getElementById("offlineHighQualityToggle").checked;
+
+    const videoEncoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => console.error("video encode error", e)
+    });
+    videoEncoder.configure({ codec: "avc1.640028", width: W, height: H, bitrate: highQuality ? 14_000_000 : 8_000_000, framerate: fps });
+
+    const audioEncoder = new AudioEncoder({
+      output: (chunk, meta) => muxer.addAudioChunk(chunk, meta),
+      error: (e) => console.error("audio encode error", e)
+    });
+    audioEncoder.configure({ codec: "mp4a.40.2", numberOfChannels: 2, sampleRate, bitrate: 128_000 });
+
+    statusEl.textContent = "Encoding audio...";
+    const ch0 = renderedBuffer.getChannelData(0);
+    const ch1 = renderedBuffer.numberOfChannels > 1 ? renderedBuffer.getChannelData(1) : ch0;
+    const chunkSize = 4096;
+    for (let i = 0; i < renderedBuffer.length; i += chunkSize){
+      const len = Math.min(chunkSize, renderedBuffer.length - i);
+      const planar = new Float32Array(len * 2);
+      planar.set(ch0.subarray(i, i+len), 0);
+      planar.set(ch1.subarray(i, i+len), len);
+      const audioData = new AudioData({
+        format: "f32-planar", sampleRate, numberOfFrames: len, numberOfChannels: 2,
+        timestamp: Math.round(i / sampleRate * 1e6), data: planar
+      });
+      audioEncoder.encode(audioData);
+      audioData.close();
+    }
+
+    // High quality supersamples at 2x then downsamples (sharper, slower).
+    // Fast mode (default) draws directly at target resolution — no extra draw pass.
+    const SS = highQuality ? 2 : 1;
+    const drawCanvas = document.createElement("canvas");
+    drawCanvas.width = W * SS; drawCanvas.height = H * SS;
+    const drawCtx = drawCanvas.getContext("2d");
+    if (SS !== 1) drawCtx.scale(SS, SS);
+
+    let outCanvas = drawCanvas, outCtx = null;
+    if (SS !== 1){
+      outCanvas = document.createElement("canvas");
+      outCanvas.width = W; outCanvas.height = H;
+      outCtx = outCanvas.getContext("2d");
+      outCtx.imageSmoothingEnabled = true;
+      outCtx.imageSmoothingQuality = "high";
+    }
+
+    const frameCount = Math.ceil(totalDuration * fps);
+
+    for (let f = 0; f < frameCount; f++){
+      const now = f / fps;
+      drawOfflineFrame(drawCtx, now, layout, keyRange, W, H, fallH, keyboardH);
+      if (outCtx) outCtx.drawImage(drawCanvas, 0, 0, W*SS, H*SS, 0, 0, W, H);
+      const frame = new VideoFrame(outCanvas, { timestamp: Math.round(now * 1e6) });
+      videoEncoder.encode(frame);
+      frame.close();
+      if (f % 30 === 0){
+        statusEl.textContent = "Rendering video... " + Math.round((f/frameCount)*100) + "%";
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    statusEl.textContent = "Finalizing...";
+    await videoEncoder.flush();
+    await audioEncoder.flush();
+    muxer.finalize();
+
+    const { buffer } = muxer.target;
+    const blob = new Blob([buffer], {type: "video/mp4"});
+    const url = URL.createObjectURL(blob);
+    const sizeMB = (blob.size / (1024*1024)).toFixed(1);
+    const filename = (state.songName || "notefall-export") + ".mp4";
+
+    statusEl.innerHTML = "";
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.textContent = "Download MP4 (" + sizeMB + " MB)";
+    link.className = "btn primary";
+    link.style.display = "inline-flex";
+    statusEl.appendChild(link);
+  } catch(err){
+    statusEl.textContent = "Export failed: " + err.message + ". The Screen Record option below works as a fallback.";
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalBtnText;
+  }
+}
+
+document.getElementById("offlineExportBtn").addEventListener("click", exportVideoOffline);
+
+/* =========================================================
+   VIDEO EXPORT (records exactly what's on screen, in-browser)
+   ========================================================= */
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordDisplayStream = null;
+let recordAudioDestNode = null;
+
+function pickRecorderMimeType(){
+  const candidates = [
+    // WebM is MediaRecorder's original, most mature and widely-tested output —
+    // prefer it as the default since native MP4 recording support varies more
+    // across browsers and has shown audio/video sync issues in testing.
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm",
+    // Native MP4 as a last-resort fallback for browsers with no WebM support
+    "video/mp4;codecs=avc1.640028,mp4a.40.2",
+    "video/mp4;codecs=h264,aac",
+    "video/mp4"
+  ];
+  if (!window.MediaRecorder) return "";
+  for (const type of candidates){
+    if (MediaRecorder.isTypeSupported(type)) return type;
+  }
+  return "";
+}
+
+async function startVideoExport(){
+  const statusEl = document.getElementById("exportStatus");
+  const btn = document.getElementById("exportVideoBtn");
+
+  if (!state.song){
+    statusEl.textContent = "Load a song first.";
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia || !window.MediaRecorder){
+    statusEl.textContent = "This browser doesn't support in-app recording. Try Chrome or Edge, on a page served over https (not a local file). Screen-recording software still works as a fallback.";
+    return;
+  }
+
+  const includeAudio = document.getElementById("exportAudioToggle").checked;
+  const exportRange = document.getElementById("exportRangeSelect").value;
+
+  statusEl.textContent = "Choose \"This Tab\" in the picker that just opened...";
+  try{
+    recordDisplayStream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        displaySurface: "browser",
+        width: {ideal: window.innerWidth},
+        height: {ideal: window.innerHeight}
+      },
+      audio: false,
+      preferCurrentTab: true
+    });
+  } catch(err){
+    statusEl.textContent = "Recording cancelled.";
+    return;
+  }
+
+  ensureAudio();
+  const tracks = [...recordDisplayStream.getVideoTracks()];
+  if (includeAudio){
+    recordAudioDestNode = audioCtx.createMediaStreamDestination();
+    masterGain.connect(recordAudioDestNode);
+    tracks.push(...recordAudioDestNode.stream.getAudioTracks());
+  }
+  const combined = new MediaStream(tracks);
+  const mimeType = pickRecorderMimeType();
+
+  recordedChunks = [];
+  try{
+    mediaRecorder = mimeType ? new MediaRecorder(combined, {mimeType}) : new MediaRecorder(combined);
+  } catch(err){
+    statusEl.textContent = "Could not start the recorder: " + err.message;
+    cleanupExportStream();
+    return;
+  }
+
+  mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = () => finishVideoExport(mimeType || "video/webm");
+
+  // If the person stops sharing via the browser's own "Stop sharing" control
+  const videoTrack = recordDisplayStream.getVideoTracks()[0];
+  videoTrack.addEventListener("ended", () => {
+    if (state.playing) stopPlayback(); else stopVideoExport();
+  });
+  // The browser can renegotiate the actual captured resolution shortly after the
+  // "sharing" indicator appears — re-sync our own canvas/keyboard sizing whenever
+  // that happens, so we never end up sized for a stale/wrong dimension.
+  videoTrack.addEventListener("resize", () => {
+    resizeCanvas();
+    renderKeyboard();
+  });
+
+  // Performance Mode makes the capture smoother — force it on for the recording, restore after
+  state._preExportPerfMode = state.performanceMode;
+  state.performanceMode = true;
+
+  // Use a consistent keyboard range for the recording, restore the person's choice after
+  state._preExportRangeMode = state.rangeMode;
+  state.rangeMode = exportRange;
+
+  // Give the browser's own capture UI a moment to finish appearing/settling before
+  // we measure our layout — avoids sizing the canvas against a stale, pre-indicator viewport.
+  await new Promise(r => setTimeout(r, 200));
+  applyRangeMode();
+  resizeCanvas();
+
+  mediaRecorder.start();
+  btn.textContent = "Stop Recording";
+  btn.onclick = () => stopPlayback();
+  statusEl.textContent = "Recording from the start of the song...";
+
+  seekTo(0);
+  play();
+}
+
+function stopVideoExport(){
+  if (mediaRecorder && mediaRecorder.state !== "inactive"){
+    mediaRecorder.stop();
+  }
+  cleanupExportStream();
+}
+
+function cleanupExportStream(){
+  if (recordDisplayStream){
+    recordDisplayStream.getTracks().forEach(t => t.stop());
+    recordDisplayStream = null;
+  }
+  if (recordAudioDestNode){
+    try{ masterGain.disconnect(recordAudioDestNode); } catch(e){}
+    recordAudioDestNode = null;
+  }
+  if (typeof state._preExportPerfMode === "boolean"){
+    state.performanceMode = state._preExportPerfMode;
+    resizeCanvas();
+    delete state._preExportPerfMode;
+  }
+  if (state._preExportRangeMode){
+    state.rangeMode = state._preExportRangeMode;
+    applyRangeMode();
+    delete state._preExportRangeMode;
+  }
+  const btn = document.getElementById("exportVideoBtn");
+  btn.disabled = true;
+  btn.textContent = "Finishing...";
+}
+
+function finishVideoExport(mimeType){
+  const blob = new Blob(recordedChunks, {type: mimeType});
+  const isMp4 = mimeType.indexOf("mp4") !== -1;
+  const url = URL.createObjectURL(blob);
+  const statusEl = document.getElementById("exportStatus");
+  const sizeMB = (blob.size / (1024*1024)).toFixed(1);
+  const ext = isMp4 ? "mp4" : "webm";
+  const filename = (state.songName || "notefall-recording") + "." + ext;
+
+  statusEl.innerHTML = "";
+
+  const rawLabel = document.createElement("div");
+  rawLabel.style.cssText = "font-size:11px; color:var(--text-2); margin-bottom:4px;";
+  rawLabel.textContent = "Your recording:";
+  statusEl.appendChild(rawLabel);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.textContent = "Download " + ext.toUpperCase() + " (" + sizeMB + " MB)";
+  link.className = "btn primary";
+  link.style.display = "inline-flex";
+  statusEl.appendChild(link);
+
+  const fixNote = document.createElement("div");
+  fixNote.style.cssText = "margin-top:14px; font-size:11px; color:var(--text-2); line-height:1.6;";
+  fixNote.innerHTML = "If it's laggy/jumpy in a video editor (browser recordings use a variable frame rate), the reliable fix is a free desktop tool — <strong>HandBrake</strong> (drag the file in, use a preset, export) — or this command if you have <strong>ffmpeg</strong> installed:";
+  statusEl.appendChild(fixNote);
+
+  const cmdBox = document.createElement("code");
+  cmdBox.style.cssText = "display:block; margin-top:6px; padding:8px 10px; background:#0a0b0f; border:1px solid var(--panel-border); border-radius:8px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-1); overflow-x:auto; white-space:pre;";
+  cmdBox.textContent = 'ffmpeg -i "' + filename + '" -r 30 -vsync cfr -c:v libx264 -crf 20 -c:a aac "' + (state.songName || "notefall-recording") + '-smooth.mp4"';
+  statusEl.appendChild(cmdBox);
+
+  const expNote = document.createElement("div");
+  expNote.style.cssText = "margin-top:14px; font-size:11px; color:var(--text-2); line-height:1.5;";
+  expNote.innerHTML = "<strong>Experimental</strong> — an in-browser version of the same fix. This has been unreliable across different browsers, so the options above are the dependable path:";
+  statusEl.appendChild(expNote);
+
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;";
+
+  const mp4Btn = document.createElement("button");
+  mp4Btn.className = "btn";
+  mp4Btn.textContent = "Try smooth MP4 (experimental)";
+  mp4Btn.addEventListener("click", () => convertRecording(blob, "mp4", statusEl));
+
+  const mkvBtn = document.createElement("button");
+  mkvBtn.className = "btn";
+  mkvBtn.textContent = "Try smooth MKV (experimental)";
+  mkvBtn.addEventListener("click", () => convertRecording(blob, "mkv", statusEl));
+
+  btnRow.appendChild(mp4Btn);
+  btnRow.appendChild(mkvBtn);
+  statusEl.appendChild(btnRow);
+
+  const stretchBtn = document.createElement("button");
+  stretchBtn.className = "btn";
+  stretchBtn.style.marginTop = "8px";
+  stretchBtn.textContent = "Try fixing empty space (experimental)";
+  stretchBtn.addEventListener("click", () => stretchVideoToFill(blob, isMp4, statusEl));
+  statusEl.appendChild(stretchBtn);
+
+  const btn = document.getElementById("exportVideoBtn");
+  btn.disabled = false;
+  btn.textContent = "Start Recording";
+  btn.onclick = startVideoExport;
+}
+
+let ffmpegInstance = null;
+let ffmpegLogHandler = null;
+async function loadFFmpeg(onLog){
+  if (!window.FFmpeg){
+    await new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js";
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("couldn't load the converter script"));
+      document.head.appendChild(script);
+    });
+  }
+  if (!ffmpegInstance){
+    const { createFFmpeg } = window.FFmpeg;
+    ffmpegInstance = createFFmpeg({
+      log: false,
+      logger: ({message}) => { if (ffmpegLogHandler) ffmpegLogHandler(message); },
+      corePath: "https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js"
+    });
+    await ffmpegInstance.load();
+  }
+  ffmpegLogHandler = onLog || null;
+  return ffmpegInstance;
+}
+
+// Re-encodes to a constant frame rate (fixes the "lag and jumping" that video
+// editors often show with MediaRecorder's naturally variable frame rate output),
+// into either an MP4 or MKV container — same codecs (H.264 + AAC), just the wrapper differs.
+async function convertRecording(srcBlob, targetExt, statusEl){
+  const formatLabel = targetExt.toUpperCase();
+  statusEl.innerHTML = "Loading the video converter (one-time download)...";
+  let ff;
+  try{
+    ff = await loadFFmpeg();
+  } catch(err){
+    statusEl.textContent = "Couldn't load the in-browser converter (" + err.message + "). Your original recording download above is unaffected — try a different browser (Chrome/Edge work best), or use the original file as-is.";
+    return;
+  }
+
+  statusEl.textContent = "Converting to smooth " + formatLabel + " — this can take a minute or two for longer recordings...";
+  try{
+    const { fetchFile } = window.FFmpeg;
+    const inName = "convin" + (srcBlob.type.indexOf("mp4") !== -1 ? ".mp4" : ".webm");
+    const outName = "convout." + targetExt;
+    ff.FS("writeFile", inName, await fetchFile(srcBlob));
+    await ff.run(
+      "-i", inName,
+      "-r", "30", "-vsync", "cfr",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+      "-c:a", "aac", "-ar", "44100",
+      outName
+    );
+    const data = ff.FS("readFile", outName);
+    const mime = targetExt === "mkv" ? "video/x-matroska" : "video/mp4";
+    const outBlob = new Blob([data.buffer], {type: mime});
+    const outUrl = URL.createObjectURL(outBlob);
+    const sizeMB = (outBlob.size / (1024*1024)).toFixed(1);
+    const filename = (state.songName || "notefall-recording") + "-smooth." + targetExt;
+
+    const resultRow = document.createElement("div");
+    resultRow.style.marginTop = "8px";
+    const link = document.createElement("a");
+    link.href = outUrl;
+    link.download = filename;
+    link.textContent = "Download smooth " + formatLabel + " (" + sizeMB + " MB)";
+    link.className = "btn primary";
+    link.style.display = "inline-flex";
+    resultRow.appendChild(link);
+    statusEl.appendChild(resultRow);
+  } catch(err){
+    statusEl.textContent = "Conversion to " + formatLabel + " failed: " + err.message + ". The original download above still works.";
+  }
+}
+
+async function stretchVideoToFill(blob, isMp4, statusEl){
+  statusEl.innerHTML = "Loading the video processor (one-time download)...";
+  const cropLines = [];
+  let ff;
+  try{
+    ff = await loadFFmpeg((msg) => { if (msg && msg.indexOf("crop=") !== -1) cropLines.push(msg); });
+  } catch(err){
+    statusEl.textContent = "Couldn't load the in-browser video processor (" + err.message + "). Your original recording download above is unaffected — try a different browser (Chrome/Edge work best).";
+    return;
+  }
+
+  statusEl.textContent = "Scanning the recording for empty space...";
+  try{
+    const { fetchFile } = window.FFmpeg;
+    const inName = "stretchin" + (isMp4 ? ".mp4" : ".webm");
+    ff.FS("writeFile", inName, await fetchFile(blob));
+
+    // Pass 1: analyze the first ~2 seconds of frames to detect any solid-color border
+    await ff.run("-i", inName, "-vf", "cropdetect=24:16:0", "-frames:v", "60", "-f", "null", "-");
+
+    let crop = null;
+    for (let i = cropLines.length - 1; i >= 0; i--){
+      const m = cropLines[i].match(/crop=(\d+):(\d+):(\d+):(\d+)/);
+      if (m){ crop = {w:+m[1], h:+m[2], x:+m[3], y:+m[4]}; break; }
+    }
+
+    if (!crop || (crop.x === 0 && crop.y === 0)){
+      statusEl.textContent = "No empty space detected in this recording — nothing to fix.";
+      return;
+    }
+
+    // Assume symmetric bars (standard for letterbox/pillarbox) to recover the original frame size
+    const origW = crop.w + crop.x * 2;
+    const origH = crop.h + crop.y * 2;
+
+    statusEl.textContent = "Removing empty space and stretching to fill — this can take a minute or two...";
+    await ff.run(
+      "-i", inName,
+      "-vf", `crop=${crop.w}:${crop.h}:${crop.x}:${crop.y},scale=${origW}:${origH}:flags=lanczos`,
+      "-r", "30", "-vsync", "cfr",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-ar", "44100",
+      "stretchout.mp4"
+    );
+    const data = ff.FS("readFile", "stretchout.mp4");
+    const outBlob = new Blob([data.buffer], {type:"video/mp4"});
+    const outUrl = URL.createObjectURL(outBlob);
+    const sizeMB = (outBlob.size / (1024*1024)).toFixed(1);
+    const filename = (state.songName || "notefall-recording") + "-filled.mp4";
+
+    statusEl.innerHTML = "";
+    const link = document.createElement("a");
+    link.href = outUrl;
+    link.download = filename;
+    link.textContent = "Download filled MP4 (" + sizeMB + " MB)";
+    link.className = "btn primary";
+    link.style.display = "inline-flex";
+    statusEl.appendChild(link);
+  } catch(err){
+    statusEl.textContent = "Couldn't process the video: " + err.message + ". The original download above still works.";
+  }
+}
+
+document.getElementById("exportVideoBtn").addEventListener("click", startVideoExport);
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+   ========================================================= */
+function stepSpeed(dir){
+  const select = document.getElementById("speedSelect");
+  const options = Array.from(select.options).map(o => parseFloat(o.value));
+  let idx = options.indexOf(state.speed);
+  if (idx === -1){
+    idx = options.reduce((best, val, i) => Math.abs(val-state.speed) < Math.abs(options[best]-state.speed) ? i : best, 0);
+  }
+  idx = Math.max(0, Math.min(options.length - 1, idx + dir));
+  const now = getSongTime();
+  state.speed = options[idx];
+  select.value = String(state.speed);
+  if (state.playing) state.startCtxTime = audioCtx.currentTime - now/state.speed;
+  else state.songTime = now;
+  saveSettings();
+}
+
+window.addEventListener("keydown", (e) => {
+  const tag = (e.target && e.target.tagName) || "";
+  if (["INPUT","SELECT","TEXTAREA"].includes(tag)) return;
+  if (!state.song) return;
+  if (e.code === "Space"){
+    e.preventDefault();
+    state.playing ? pause() : play();
+  } else if (e.code === "ArrowLeft"){
+    e.preventDefault();
+    seekTo(getSongTime() - 5);
+  } else if (e.code === "ArrowRight"){
+    e.preventDefault();
+    seekTo(getSongTime() + 5);
+  } else if (e.code === "ArrowUp"){
+    e.preventDefault();
+    stepSpeed(1);
+  } else if (e.code === "ArrowDown"){
+    e.preventDefault();
+    stepSpeed(-1);
+  } else if (e.code === "KeyV" && (e.ctrlKey || e.metaKey)){
+    e.preventDefault();
+    if (mediaRecorder && mediaRecorder.state !== "inactive"){
+      stopPlayback();
+    } else {
+      startVideoExport();
+    }
+  }
+});
+
+/* init */
+applySavedSettings();
+applyKeyboardHeight();
+renderKeyboard();
+resizeCanvas();
+requestAnimationFrame(renderFrame);
+requestAnimationFrame(schedulerTick);
+
+})();
+</script>
+</body>
+</html>
