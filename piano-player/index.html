@@ -449,6 +449,8 @@
 </style>
 </head>
 <body>
+    <!-- Global Header Container -->
+    <div id="global-header"></div>
 <div id="app">
 
   <div class="topbar">
@@ -2841,5 +2843,21 @@ requestAnimationFrame(schedulerTick);
 
 })();
 </script>
+ <!-- Global Header Fetch Script -->
+    <script>
+        fetch("/header.html")
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById("global-header").innerHTML = data;
+                
+                // Sync search bar if redirected with query
+                const params = new URLSearchParams(window.location.search);
+                const activeQuery = params.get('search');
+                if (activeQuery) {
+                    const headerInput = document.getElementById('globalHeaderSearch');
+                    if (headerInput) headerInput.value = decodeURIComponent(activeQuery);
+                }
+            });
+    </script>
 </body>
 </html>
