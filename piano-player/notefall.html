@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- Tailwind CSS CDN (needed for the shared site header) -->
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root{
     --bg-0:#08090c;
@@ -398,6 +396,47 @@
   .chord-row select{ padding:5px 4px; font-size:10.5px; flex:1; min-width:0; }
   .chord-row.overridden{ border-color:var(--gold-dim); }
 
+  #songBankOverlay{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(6,7,10,0.7); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center;
+  }
+  #songBankOverlay.show{ display:flex; }
+  #songBankPanel{
+    width:min(480px, 92vw); max-height:80vh;
+    background:var(--bg-1); border:1px solid var(--panel-border);
+    border-radius:var(--radius-lg); box-shadow:0 24px 70px rgba(0,0,0,0.6);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .song-bank-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 20px 8px 20px;
+  }
+  .song-bank-header h3{
+    font-family:var(--font-display); font-size:17px; font-weight:700;
+  }
+  #songBankCloseBtn{
+    background:none; border:none; color:var(--text-1); font-size:22px;
+    line-height:1; cursor:pointer; padding:4px 8px; border-radius:6px;
+  }
+  #songBankCloseBtn:hover{ background:var(--panel-2); color:var(--text-0); }
+  #songBankList{
+    overflow-y:auto; padding:6px 16px 20px 16px; display:flex; flex-direction:column; gap:7px;
+  }
+  .song-bank-item{
+    display:flex; align-items:center; gap:10px;
+    width:100%; text-align:left;
+    padding:12px 14px; border-radius:var(--radius-sm);
+    background:var(--panel); border:1px solid var(--panel-border);
+    color:var(--text-0); font-family:var(--font-body); font-weight:600; font-size:13.5px;
+    cursor:pointer; transition:border-color .15s ease, background .15s ease;
+  }
+  .song-bank-item:hover{ border-color:var(--gold-dim); background:var(--panel-2); }
+  .song-bank-item svg{ width:16px; height:16px; flex-shrink:0; color:var(--gold); }
+  .song-bank-empty, .song-bank-loading{
+    padding:16px 4px; font-size:12.5px; color:var(--text-2); line-height:1.6;
+  }
+
   ::-webkit-scrollbar{ width:8px; }
   ::-webkit-scrollbar-thumb{ background:#2a2f3d; border-radius:4px; }
 
@@ -410,8 +449,6 @@
 </style>
 </head>
 <body>
-<!-- Global Header Container -->
-<div id="global-header"></div>
 <div id="app">
 
   <div class="topbar">
@@ -428,6 +465,11 @@
       Load MIDI
     </button>
     <input type="file" id="fileInput" accept=".mid,.midi" hidden>
+
+    <button class="btn" id="songBankBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="19" cy="16" r="2.5"/><path d="M21.5 16v-8"/></svg>
+      Song Bank
+    </button>
 
     <div class="transport">
       <button class="btn icon" id="playBtn" title="Play / Pause">
@@ -579,6 +621,17 @@
 
     <div id="keyboardWrap">
       <div id="keyboard"></div>
+    </div>
+  </div>
+
+  <div id="songBankOverlay">
+    <div id="songBankPanel">
+      <div class="song-bank-header">
+        <h3>Song Bank</h3>
+        <button id="songBankCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <p class="chord-hint" style="padding:0 20px;">Put your .mid files in a <strong>songs</strong> folder next to index.html, and list them in <strong>songs/manifest.json</strong>. Click a song below to load and play it.</p>
+      <div id="songBankList"></div>
     </div>
   </div>
 
@@ -1645,20 +1698,24 @@ function renderChordNameOverrides(){
 /* =========================================================
    WIRE UP UI
    ========================================================= */
+function loadMidiArrayBuffer(buffer, displayName){
+  state.songName = displayName;
+  const parsed = parseMidiBytes(buffer);
+  const tempoMap = buildTempoMap(parsed.tracks, parsed.division);
+  state._tickToSec = tempoMap.tickToSec;
+  state._parsedTracks = parsed.tracks;
+  state._tempoMap = tempoMap;
+  state.markers = [];
+  processMidiParsed(parsed, tempoMap);
+}
+
 function loadFile(file){
   if (!file) return;
-  state.songName = file.name.replace(/\.(mid|midi)$/i, "");
+  const name = file.name.replace(/\.(mid|midi)$/i, "");
   const reader = new FileReader();
   reader.onload = (e) => {
     try{
-      // capture tickToSec before rebuild via closure trick
-      const parsed = parseMidiBytes(e.target.result);
-      const tempoMap = buildTempoMap(parsed.tracks, parsed.division);
-      state._tickToSec = tempoMap.tickToSec;
-      state._parsedTracks = parsed.tracks;
-      state._tempoMap = tempoMap;
-      state.markers = [];
-      processMidiParsed(parsed, tempoMap);
+      loadMidiArrayBuffer(e.target.result, name);
     } catch(err){
       alert("Could not read this MIDI file: " + err.message);
       console.error(err);
@@ -1691,6 +1748,76 @@ function processMidiParsed(parsed, tempoMap){
 document.getElementById("uploadBtn").addEventListener("click", () => document.getElementById("fileInput").click());
 document.getElementById("uploadBtn2").addEventListener("click", () => document.getElementById("fileInput").click());
 document.getElementById("fileInput").addEventListener("change", (e) => loadFile(e.target.files[0]));
+
+/* =========================================================
+   SONG BANK (songs/manifest.json + songs/*.mid, static hosting)
+   ========================================================= */
+async function fetchSongManifest(){
+  const res = await fetch("songs/manifest.json", {cache: "no-store"});
+  if (!res.ok) throw new Error("manifest not found");
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("manifest.json should be a list");
+  return data.map(entry => {
+    if (typeof entry === "string"){
+      return {file: entry, title: entry.replace(/\.(mid|midi)$/i, "")};
+    }
+    return {file: entry.file, title: entry.title || entry.file.replace(/\.(mid|midi)$/i, "")};
+  });
+}
+
+async function openSongBank(){
+  const overlay = document.getElementById("songBankOverlay");
+  const listEl = document.getElementById("songBankList");
+  overlay.classList.add("show");
+  listEl.innerHTML = '<div class="song-bank-loading">Loading song list...</div>';
+
+  let songs;
+  try{
+    songs = await fetchSongManifest();
+  } catch(err){
+    listEl.innerHTML = '<div class="song-bank-empty">Couldn\'t load <strong>songs/manifest.json</strong>. Make sure you have a "songs" folder next to index.html with a manifest.json listing your files (see the example that comes with this app). This only works when hosted on a real server (like Cloudflare Pages) — not when opening index.html directly from disk.</div>';
+    return;
+  }
+  if (!songs.length){
+    listEl.innerHTML = '<div class="song-bank-empty">songs/manifest.json is empty — add some MIDI files and list them there.</div>';
+    return;
+  }
+  listEl.innerHTML = "";
+  songs.forEach(song => {
+    const row = document.createElement("button");
+    row.className = "song-bank-item";
+    row.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span></span>';
+    row.querySelector("span").textContent = song.title;
+    row.addEventListener("click", () => loadSongFromBank(song));
+    listEl.appendChild(row);
+  });
+}
+
+async function loadSongFromBank(song){
+  const listEl = document.getElementById("songBankList");
+  try{
+    const res = await fetch("songs/" + song.file);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const buffer = await res.arrayBuffer();
+    loadMidiArrayBuffer(buffer, song.title);
+    closeSongBank();
+    ensureAudio();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    play();
+  } catch(err){
+    listEl.insertAdjacentHTML("afterbegin", '<div class="song-bank-empty">Could not load "' + song.title + '": ' + err.message + '</div>');
+  }
+}
+
+function closeSongBank(){
+  document.getElementById("songBankOverlay").classList.remove("show");
+}
+
+document.getElementById("songBankBtn").addEventListener("click", openSongBank);
+document.getElementById("songBankCloseBtn").addEventListener("click", closeSongBank);
+document.getElementById("songBankOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "songBankOverlay") closeSongBank();
+});
 
 const dropCard = document.getElementById("dropCard");
 ["dragenter","dragover"].forEach(ev => document.body.addEventListener(ev, (e)=>{ e.preventDefault(); dropCard.classList.add("dragover"); }));
@@ -2674,6 +2801,10 @@ function stepSpeed(dir){
 window.addEventListener("keydown", (e) => {
   const tag = (e.target && e.target.tagName) || "";
   if (["INPUT","SELECT","TEXTAREA"].includes(tag)) return;
+  if (document.getElementById("songBankOverlay").classList.contains("show")){
+    if (e.code === "Escape") closeSongBank();
+    return;
+  }
   if (!state.song) return;
   if (e.code === "Space"){
     e.preventDefault();
@@ -2709,29 +2840,6 @@ requestAnimationFrame(renderFrame);
 requestAnimationFrame(schedulerTick);
 
 })();
-</script>
-
-<!-- Global Header Fetch Script -->
-<script>
-    fetch("/header.html")
-        .then(res => res.text())
-        .then(data => {
-            const container = document.getElementById("global-header");
-            container.innerHTML = data;
-
-            // Scripts inserted via innerHTML do NOT execute automatically.
-            // Manually re-create each <script> tag so header.html's search
-            // logic (handleHeaderSearch, etc.) actually runs.
-            container.querySelectorAll("script").forEach(oldScript => {
-                const newScript = document.createElement("script");
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                document.body.appendChild(newScript);
-            });
-        });
 </script>
 </body>
 </html>
