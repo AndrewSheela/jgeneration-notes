@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Egipthilirunthu Kaananukku</title>
@@ -227,7 +228,8 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
-  <div id="globalHeader"></div>
+  <div id="global-header"></div>
+  
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -308,7 +310,21 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 <div id="footer"></div>
 
 <script>
-fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("globalHeader").innerHTML = data; }); 
+fetch("/header.html")
+    .then(res => res.text())
+    .then(data => {
+        const container = document.getElementById("global-header");
+        container.innerHTML = data;
+        container.querySelectorAll("script").forEach(oldScript => {
+            const newScript = document.createElement("script");
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+        });
+    }); 
 fetch("/footer.html").then(res => res.text()).then(data => { document.getElementById("footer").innerHTML = data; });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

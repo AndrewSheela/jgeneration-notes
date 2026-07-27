@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Appa Veetil Eppothum</title>
@@ -226,7 +227,8 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
-  <div id="globalHeader"></div>
+  <div id="global-header"></div>
+  
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -291,7 +293,7 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </div>
 <div class="video-card"><div class="video-container"><iframe src="https://www.youtube.com/embed/RqWx6TiGnP4" title="Yega Sinthaye Yega Snegame Keyboard Notes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div>
 <div id="footer"></div>
-<script>fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("globalHeader").innerHTML = data; }); fetch("/footer.html").then(res => res.text()).then(data => { document.getElementById("footer").innerHTML = data; });</script>
+<script>fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("global-header").innerHTML = data; }); fetch("/footer.html").then(res => res.text()).then(data => { document.getElementById("footer").innerHTML = data; });</script>
 <script>
 'use strict';
 const CHR_SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];

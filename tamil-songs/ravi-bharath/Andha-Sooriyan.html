@@ -545,20 +545,46 @@ applyFontLevel();reRenderMusic();
 </script>
 <script>
     fetch("/header.html")
-        .then(res => res.text())
-        .then(data => {
-            const container = document.getElementById("global-header");
-            container.innerHTML = data;
-            container.querySelectorAll("script").forEach(oldScript => {
-                const newScript = document.createElement("script");
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                document.body.appendChild(newScript);
-            });
+    .then(res => res.text())
+    .then(data => {
+        const container = document.getElementById("global-header");
+        container.innerHTML = data;
+        container.querySelectorAll("script").forEach(oldScript => {
+            const newScript = document.createElement("script");
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
         });
+    });
+</script>
+
+
+<div id="footer"></div>
+<script>
+fetch("/header.html")
+  .then(res => res.text())
+  .then(data => {
+    const container = document.getElementById("global-header");
+    if (container) {
+      container.innerHTML = data;
+      container.querySelectorAll("script").forEach(oldScript => {
+        const newScript = document.createElement("script");
+        if (oldScript.src) {
+          newScript.src = oldScript.src;
+        } else {
+          newScript.textContent = oldScript.textContent;
+        }
+        document.body.appendChild(newScript);
+      });
+    }
+  });
+fetch("/footer.html").then(res => res.text()).then(data => {
+  const footer = document.getElementById("footer");
+  if (footer) footer.innerHTML = data;
+});
 </script>
 </body>
 </html>

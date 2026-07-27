@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JEEVIKINTAVARE</title>
@@ -226,7 +227,8 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
-  <div id="globalHeader"></div>
+  <div id="global-header"></div>
+  
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -414,7 +416,7 @@ document.getElementById('btn-pdf').addEventListener('click',()=>{alert('Choose S
 document.addEventListener('keydown',e=>{if(e.altKey&&e.key==='ArrowUp')doTranspose(+1);if(e.altKey&&e.key==='ArrowDown')doTranspose(-1);if(e.ctrlKey&&e.key==='p'){e.preventDefault();window.print();}});
 applyFontLevel();reRenderMusic();
 </script>
-<script>fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("globalHeader").innerHTML = data; });</script>
+<script>fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("global-header").innerHTML = data; });</script>
 <script>fetch("/footer.html").then(response => response.text()).then(data => { document.getElementById("footer").innerHTML = data; });</script>
 </body>
 </html>

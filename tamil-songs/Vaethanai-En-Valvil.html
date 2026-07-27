@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vaethanai En Valvil</title>
@@ -250,8 +251,9 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 </style>
 </head>
 <body>
+  <div id="global-header"></div>
   <!-- ✅ GLOBAL HEADER -->
-<div id="globalHeader"></div>
+
 <!-- TOOLBAR -->
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
@@ -475,7 +477,7 @@ fetch("/footer.html")
   fetch("/header.html")
     .then(res => res.text())
     .then(data => {
-      document.getElementById("globalHeader").innerHTML = data;
+      document.getElementById("global-header").innerHTML = data;
     });
 </script>
 </body>

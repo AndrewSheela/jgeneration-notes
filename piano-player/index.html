@@ -2853,7 +2853,7 @@ requestAnimationFrame(schedulerTick);
                 const params = new URLSearchParams(window.location.search);
                 const activeQuery = params.get('search');
                 if (activeQuery) {
-                    const headerInput = document.getElementById('globalHeaderSearch');
+                    const headerInput = document.getElementById('global-headerSearch');
                     if (headerInput) headerInput.value = decodeURIComponent(activeQuery);
                 }
             });
