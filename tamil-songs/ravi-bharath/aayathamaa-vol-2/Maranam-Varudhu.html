@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script src="https://cdn.tailwindcss.com"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maranam Varudhu</title>
@@ -134,8 +135,8 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 /* Row 3: Scale · Rhythm · Tempo */
 .header-row3{display:flex;align-items:center;justify-content:center;gap:28px;margin-bottom:22px;flex-wrap:wrap;}
 .meta-item{display:flex;align-items:center;gap:5px;}
-.meta-label{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#3F3F46;}
-.meta-val{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#1D4ED8;min-width:22px;padding:1px 4px;}
+.meta-label{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#3F3F46;}
+.meta-val{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:#1D4ED8;min-width:22px;padding:1px 4px;}
 
 .sheet-divider{border:none;border-top:2.5px solid #18181B;margin-bottom:26px;}
 
@@ -144,7 +145,7 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
 
 .music-system{
   display:flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   align-items:flex-start;
   row-gap:14px;
 }
@@ -218,14 +219,17 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
     font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;
   }
   .field-label{font-size:11px;}
-  .meta-label,.meta-val{font-size:12px;}
+  .meta-label,.meta-val{font-size:14px;}
 
   .header-row3{gap:14px;}
   :root{--fs-note:12px;--fs-lyric:12px;--fs-chord:10px;--fs-bar:13px;}
 }
+
+.video-card { max-width: 800px; margin: 20px auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.15); } .video-container { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; } .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 </style>
 </head>
 <body>
+<div id="global-header"></div>
 <div id="toolbar" style="display:flex">
   <div class="tb-inner">
     <div class="tb-row">
@@ -247,8 +251,8 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
       <div class="sep"></div>
       <div class="tb-group">
         <span class="tb-label">Bars/line</span>
-        <input type="range" id="mpl-slider" min="1" max="8" value="4">
-        <span id="mpl-val">4</span>
+        <input type="range" id="mpl-slider" min="1" max="8" value="2">
+        <span id="mpl-val">2</span>
       </div>
     </div>
     <div class="tb-row">
@@ -291,6 +295,21 @@ body{font-family:'Outfit',sans-serif;background:var(--app-bg);min-height:100vh;c
     </div>
   </div>
 </div>
+<div style="text-align:center; margin:40px 0;">
+    <a href="/music-sheet/tamil-songs/ravi-bharath/aayathamaa-vol-2-ms/Maranam-Varudhu-ms.html" 
+       target="_blank" 
+       style="background-color:#2d89ef; color:white; padding:25px 80px; text-decoration:none; border-radius:12px; font-weight:bold; font-size:1.5rem; display:inline-block; min-width:350px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: transform 0.2s;">
+       🎼 Click Here For Sheet Music
+    </a>
+</div>
+<br></br>  
+<div class="video-card"><div class="video-container"><iframe src="https://www.youtube.com/embed/ypUCR7j_rUY" title="Yega Sinthaye Yega Snegame Keyboard Notes" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div></div>
+<div id="footer"></div>
+<script>
+fetch("/header.html").then(res => res.text()).then(data => { document.getElementById("global-header").innerHTML = data; }); 
+fetch("/footer.html").then(res => res.text()).then(data => { document.getElementById("footer").innerHTML = data; });
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -300,7 +319,7 @@ const CHR_FLAT=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const STEP_BASE={"C":0,"D":2,"E":4,"F":5,"G":7,"A":9,"B":11};
 const KEY_NAMES={"major":{"0":"C","1":"G","2":"D","3":"A","4":"E","5":"B","6":"F#","7":"C#","-7":"Cb","-6":"Gb","-5":"Db","-4":"Ab","-3":"Eb","-2":"Bb","-1":"F"},"minor":{"0":"A","1":"E","2":"B","3":"F#","4":"C#","5":"G#","6":"D#","7":"A#","-7":"Ab","-6":"Eb","-5":"Bb","-4":"F","-3":"C","-2":"G","-1":"D"}};
 const KIND_MAP={"major":"","minor":"m","dominant":"7","major-seventh":"maj7","minor-seventh":"m7","diminished":"dim","augmented":"aug","diminished-seventh":"dim7","half-diminished":"m7b5","major-minor":"mMaj7","suspended-second":"sus2","suspended-fourth":"sus4","major-sixth":"6","minor-sixth":"m6","dominant-ninth":"9","major-ninth":"maj9","minor-ninth":"m9","dominant-11th":"11","major-11th":"maj11","minor-11th":"m11","dominant-13th":"13","major-13th":"maj13","minor-13th":"m13","power":"5","Neapolitan":"N","Italian":"It","French":"Fr","German":"Ger","pedal":"ped","none":"","other":""};
-const FONT_SIZES=[{"note":11,"lyric":11,"chord":10,"bar":12},{"note":12,"lyric":12,"chord":11,"bar":13},{"note":14,"lyric":13,"chord":12,"bar":15},{"note":16,"lyric":15,"chord":13,"bar":17},{"note":18,"lyric":17,"chord":15,"bar":19}];
+const FONT_SIZES=[{"note":9,"lyric":9,"chord":8,"bar":10},{"note":10,"lyric":10,"chord":9,"bar":11},{"note":11,"lyric":11,"chord":10,"bar":12},{"note":12,"lyric":12,"chord":11,"bar":13},{"note":14,"lyric":13,"chord":12,"bar":15},{"note":16,"lyric":15,"chord":13,"bar":17},{"note":18,"lyric":17,"chord":15,"bar":19},{"note":21,"lyric":19,"chord":17,"bar":22},{"note":24,"lyric":22,"chord":19,"bar":25}];
 function noteToIdx(step,alter){return((STEP_BASE[step]+Math.round(alter||0))%12+12)%12;}
 function idxToName(idx,fl){return fl?CHR_FLAT[idx]:CHR_SHARP[idx];}
 function useFlats(semitones,fifths){return semitones<0||fifths<0;}
@@ -358,6 +377,36 @@ function buildBarline(isEnd){
   bl.appendChild(nd);bl.appendChild(ld);bl.appendChild(cd);
   return bl;
 }
+function buildMeasureCells(measure,semitones,flats){
+  const cells=[];
+  const sortedH=[...measure.harmonies].sort((a,b)=>a.divOff-b.divOff);
+  let hIdx=0;
+
+  for(const note of measure.notes){
+    // Chords on rests BEFORE this note — render as '-' placeholder
+    while(hIdx<sortedH.length&&sortedH[hIdx].divOff<note.divOff-0.5){
+      cells.push(buildCell('-','',chordText(sortedH[hIdx++],semitones,flats)));
+    }
+    let activeChord=null;
+    while(hIdx<sortedH.length&&sortedH[hIdx].divOff<=note.divOff+0.5){activeChord=sortedH[hIdx];hIdx++;}
+    const mainNote=transposeStep(note.step,note.alter,semitones,flats);
+    let noteStr=mainNote;
+    if(note.extra&&note.extra.length>0)
+      noteStr=mainNote+','+note.extra.map(e=>transposeStep(e.step,e.alter,semitones,flats)).join(',');
+    cells.push(buildCell(noteStr,note.lyric?note.lyric.text:'',activeChord?chordText(activeChord,semitones,flats):''));
+  }
+
+  // Remaining chords after last note (rests at end of measure)
+  while(hIdx<sortedH.length){
+    cells.push(buildCell('-','',chordText(sortedH[hIdx++],semitones,flats)));
+  }
+
+  if(!measure.notes.length&&!measure.harmonies.length){
+    cells.push(buildCell('—','',''));
+  }
+
+  return cells;
+}
 function buildSystem(measures,semitones,flats){
   const sys=document.createElement('div');
   sys.className='music-system';
@@ -366,34 +415,7 @@ function buildSystem(measures,semitones,flats){
     const block=document.createElement('div');
     block.className='measure-block';
 
-    if(mi>0)block.appendChild(buildBarline(false));
-
-    const sortedH=[...measure.harmonies].sort((a,b)=>a.divOff-b.divOff);
-    let hIdx=0;
-
-    for(const note of measure.notes){
-      // Chords on rests BEFORE this note — render as '-' placeholder
-      while(hIdx<sortedH.length&&sortedH[hIdx].divOff<note.divOff-0.5){
-        block.appendChild(buildCell('-','',chordText(sortedH[hIdx++],semitones,flats)));
-      }
-      let activeChord=null;
-      while(hIdx<sortedH.length&&sortedH[hIdx].divOff<=note.divOff+0.5){activeChord=sortedH[hIdx];hIdx++;}
-      const mainNote=transposeStep(note.step,note.alter,semitones,flats);
-      let noteStr=mainNote;
-      if(note.extra&&note.extra.length>0)
-        noteStr=mainNote+','+note.extra.map(e=>transposeStep(e.step,e.alter,semitones,flats)).join(',');
-      block.appendChild(buildCell(noteStr,note.lyric?note.lyric.text:'',activeChord?chordText(activeChord,semitones,flats):''));
-    }
-
-    // Remaining chords after last note (rests at end of measure)
-    while(hIdx<sortedH.length){
-      block.appendChild(buildCell('-','',chordText(sortedH[hIdx++],semitones,flats)));
-    }
-
-    if(!measure.notes.length&&!measure.harmonies.length){
-      block.appendChild(buildCell('—','',''));
-    }
-
+    buildMeasureCells(measure,semitones,flats).forEach(c=>block.appendChild(c));
     block.appendChild(buildBarline(mi===measures.length-1));
     sys.appendChild(block);
   });
@@ -470,6 +492,41 @@ function buildChordSystem(measures,semitones,flats){
 
   return line;
 }
+function measureRawWidth(el){
+  el.style.position='absolute';
+  el.style.visibility='hidden';
+  el.style.left='-99999px';
+  el.style.top='0';
+  el.style.whiteSpace='nowrap';
+  document.body.appendChild(el);
+  const w=el.getBoundingClientRect().width;
+  document.body.removeChild(el);
+  return w;
+}
+function packMeasuresIntoLines(measures,semitones,flats,availWidth){
+  if(!measures.length)return[];
+  const SAFETY_MARGIN=10; // guards against sub-pixel/font-rounding differences between measured and rendered width
+  const budget=Math.max(0,availWidth-SAFETY_MARGIN);
+  const barW=measureRawWidth(buildBarline(false));
+  const widths=measures.map(m=>{
+    const wrap=document.createElement('div');
+    wrap.className='measure-block';
+    buildMeasureCells(m,semitones,flats).forEach(c=>wrap.appendChild(c));
+    return measureRawWidth(wrap)+barW;
+  });
+  const lines=[];let cur=[];let curW=0;
+  measures.forEach((m,i)=>{
+    const w=widths[i];
+    const overWidth=cur.length>0&&(curW+w>budget);
+    const overCount=cur.length>=mplValue;
+    if(cur.length>0&&(overWidth||overCount)){
+      lines.push(cur);cur=[];curW=0;
+    }
+    cur.push(m);curW+=w;
+  });
+  if(cur.length)lines.push(cur);
+  return lines;
+}
 function renderMusic(flats){
   const container=document.getElementById('music-content');
   container.innerHTML='';
@@ -478,15 +535,27 @@ function renderMusic(flats){
       container.appendChild(buildChordSystem(songData.measures.slice(i,i+mplValue),currentTranspose,flats));
     }
   } else {
-    for(let i=0;i<songData.measures.length;i+=mplValue){
-      container.appendChild(buildSystem(songData.measures.slice(i,i+mplValue),currentTranspose,flats));
+    const availWidth=container.clientWidth||760;
+    const lines=packMeasuresIntoLines(songData.measures,currentTranspose,flats,availWidth);
+    lines.forEach(group=>container.appendChild(buildSystem(group,currentTranspose,flats)));
+    // Custom webfonts (Courier Prime / Lora / Outfit) may still be loading when the
+    // measurements above run, which throws off the pixel-width packing. Re-pack once
+    // the real fonts are confirmed ready so line breaks land in the right place.
+    if(document.fonts&&document.fonts.status!=='loaded'){
+      document.fonts.ready.then(()=>{
+        if(!songData||chordMode)return;
+        const w=container.clientWidth||760;
+        container.innerHTML='';
+        packMeasuresIntoLines(songData.measures,currentTranspose,flats,w)
+          .forEach(group=>container.appendChild(buildSystem(group,currentTranspose,flats)));
+      });
     }
   }
 }
 let songData={"title":"Maranam Varudhu","composer":"Ravi Bharath","lyricist":"","key":{"fifths":-3,"mode":"minor"},"timeSignature":"4/4","tempo":75,"measures":[{"number":"1","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"B","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"ra","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":4,"lyric":{"text":"Va","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":5,"lyric":{"text":"ru","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":6,"lyric":{"text":"dhu","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":4,"divOff":15,"lyric":{"text":"Un","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"2","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor-seventh","kindText":"m7","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"B","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":4,"divOff":0,"lyric":{"text":"Mu","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"di","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"vum","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":4,"lyric":{"text":"Va","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":5,"lyric":{"text":"ru","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":6,"lyric":{"text":"dhu","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"3","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"F","rootAlter":0,"kind":"dominant","kindText":"7","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"B","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"rik","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"kum","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":4,"lyric":{"text":"Mun","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":5,"lyric":null,"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":6,"lyric":{"text":"nae","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"4","harmonies":[{"divOff":0,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":4,"rootStep":"F","rootAlter":0,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"E","alter":-1,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"Thi","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":3,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":4,"divOff":4,"lyric":{"text":"bu","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"5","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"D","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0}],"notes":[{"step":"B","alter":-1,"octave":4,"divOff":0,"lyric":{"text":"Soth","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"thup","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"pa","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":3,"lyric":{"text":"ththu","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"Saer","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":5,"lyric":null,"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":6,"lyric":{"text":"tha","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":7,"lyric":{"text":"dhu","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":8,"lyric":{"text":"Poo","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":9,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":10,"lyric":{"text":"dhum","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":11,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":12,"lyric":null,"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":13,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":14,"lyric":null,"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":15,"lyric":null,"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"6","harmonies":[{"divOff":0,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"F","rootAlter":0,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"B","alter":-1,"octave":4,"divOff":0,"lyric":{"text":"So","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"gu","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"saa","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":3,"lyric":{"text":"ga","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"Vaazhn","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":5,"lyric":null,"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":6,"lyric":{"text":"dha","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":7,"lyric":{"text":"thu","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":8,"lyric":{"text":"Po","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":5,"divOff":9,"lyric":null,"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":10,"lyric":{"text":"thum","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":5,"divOff":11,"lyric":null,"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":12,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":13,"lyric":null,"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":14,"lyric":null,"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"7","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"D","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0}],"notes":[{"step":"B","alter":-1,"octave":4,"divOff":0,"lyric":{"text":"Soom","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"bae","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"ri","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":3,"lyric":{"text":"yaai","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"I","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":5,"lyric":{"text":"rundh","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":6,"lyric":{"text":"dha","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":7,"lyric":{"text":"dhu","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":8,"lyric":{"text":"Poo","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":9,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":10,"lyric":{"text":"dhum","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":11,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":12,"lyric":null,"extra":[]},{"step":"E","alter":-1,"octave":5,"divOff":13,"lyric":null,"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":14,"lyric":null,"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":15,"lyric":null,"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"8","harmonies":[{"divOff":0,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":12,"rootStep":"F","rootAlter":0,"kind":"suspended-fourth","kindText":"4","bassStep":null,"bassAlter":0}],"notes":[{"step":"B","alter":-1,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"thi","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":3,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":4,"lyric":{"text":"bu","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"9","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":5,"divOff":0,"lyric":{"text":"Vee","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"dha","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"vaak","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":3,"lyric":{"text":"ku","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"Ni","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":5,"lyric":{"text":"rai","syllabic":"single"},"extra":[]},{"step":"A","alter":-1,"octave":4,"divOff":6,"lyric":{"text":"vae","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":7,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":8,"lyric":{"text":"Kaa","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":9,"lyric":null,"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":10,"lyric":{"text":"lam","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"10","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":5,"divOff":0,"lyric":{"text":"Vae","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"dha","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"nai","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":3,"lyric":{"text":"gal","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"Aa","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":5,"lyric":{"text":"ram","syllabic":"single"},"extra":[]},{"step":"A","alter":-1,"octave":4,"divOff":6,"lyric":{"text":"bik","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":7,"lyric":{"text":"kum","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":8,"lyric":{"text":"Kaa","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":9,"lyric":null,"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":10,"lyric":{"text":"lam","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"11","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":4,"rootStep":"A","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":5,"divOff":0,"lyric":{"text":"Vee","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":1,"lyric":{"text":"ga","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":2,"lyric":{"text":"maa","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":3,"lyric":{"text":"ga","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":4,"lyric":{"text":"Dhe","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":5,"lyric":{"text":"van","syllabic":"single"},"extra":[]},{"step":"A","alter":-1,"octave":4,"divOff":6,"lyric":{"text":"Va","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":7,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":8,"lyric":{"text":"Nay","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":9,"lyric":null,"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":10,"lyric":{"text":"ram","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"12","harmonies":[{"divOff":0,"rootStep":"D","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":4,"rootStep":"F","rootAlter":0,"kind":"minor-sixth","kindText":"m6","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"G","rootAlter":0,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":12,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"Thi","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":3,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":4,"lyric":{"text":"bu","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":7,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":8,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":10,"lyric":{"text":"Thi","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":11,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":4,"divOff":12,"lyric":{"text":"bu","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"13","harmonies":[{"divOff":0,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0},{"divOff":8,"rootStep":"E","rootAlter":-1,"kind":"major","kindText":null,"bassStep":null,"bassAlter":0},{"divOff":12,"rootStep":"C","rootAlter":0,"kind":"minor","kindText":"m","bassStep":null,"bassAlter":0}],"notes":[{"step":"C","alter":0,"octave":4,"divOff":0,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":4,"divOff":1,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"E","alter":-1,"octave":4,"divOff":2,"lyric":{"text":"Thi","syllabic":"single"},"extra":[]},{"step":"F","alter":0,"octave":4,"divOff":3,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":4,"lyric":{"text":"bu","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":7,"lyric":{"text":"Ma","syllabic":"single"},"extra":[]},{"step":"G","alter":0,"octave":4,"divOff":8,"lyric":{"text":"nam","syllabic":"single"},"extra":[]},{"step":"B","alter":-1,"octave":4,"divOff":10,"lyric":{"text":"Thi","syllabic":"single"},"extra":[]},{"step":"D","alter":0,"octave":5,"divOff":11,"lyric":{"text":"rum","syllabic":"single"},"extra":[]},{"step":"C","alter":0,"octave":5,"divOff":12,"lyric":{"text":"bu","syllabic":"single"},"extra":[]}],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4},{"number":"14","harmonies":[],"notes":[],"key":{"fifths":-3,"mode":"minor"},"beats":4,"beatType":4}]};
 let currentTranspose=0;
-let mplValue=4;
-let fontLevel=3;
+let mplValue=2;
+let fontLevel=6;
 let userKeyBase="C minor";
 let userKeyBaseAt=0;
 let chordMode=false;
@@ -498,8 +567,9 @@ document.getElementById('btn-dn1').addEventListener('click',()=>doTranspose(-1))
 document.getElementById('btn-up1').addEventListener('click',()=>doTranspose(+1));
 document.getElementById('btn-reset').addEventListener('click',()=>{currentTranspose=0;reRenderMusic();});
 document.getElementById('btn-sm').addEventListener('click',()=>{if(fontLevel>1){fontLevel--;applyFontLevel();}});
-document.getElementById('btn-lg').addEventListener('click',()=>{if(fontLevel<5){fontLevel++;applyFontLevel();}});
+document.getElementById('btn-lg').addEventListener('click',()=>{if(fontLevel<9){fontLevel++;applyFontLevel();}});
 const mplSlider=document.getElementById('mpl-slider');mplSlider.addEventListener('input',()=>{mplValue=parseInt(mplSlider.value);document.getElementById('mpl-val').textContent=mplValue;reRenderMusic();});
+let resizeTimer=null;window.addEventListener('resize',()=>{if(!songData||chordMode)return;clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{reRenderMusic();},150);});
 document.getElementById('btn-print').addEventListener('click',()=>window.print());
 
 /* ── Chord Mode toggle ── */
